@@ -1,0 +1,8 @@
+canvas {
+    border: 1px solid #000;
+}
+
+#hidden_canvas {
+    visibility: hidden;
+    display: none;
+}

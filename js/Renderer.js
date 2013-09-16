@@ -90,6 +90,29 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         },
 
         drawScreen: function(screen) {
+            switch(screen.id) {
+                case "screen_inventory":
+                    this.drawStandardScreen(screen);
+                    this.drawInventoryScreen(screen);
+                    break;
+                default:
+                    this.drawStandardScreen(screen);
+                    break;
+            }
+        },
+
+        drawInventoryScreen: function(screen) {
+            var self = this;
+            var ctx = this.getContext();
+            var y = screen.y+80;
+            var x = screen.x+30;
+            _.each(this.game.player.inventory, function(item) {
+                self.drawText(item.id, x, y);
+                y += 20;
+            });
+        },
+
+        drawStandardScreen: function(screen) {
             // WIP
             var ctx = this.getContext();
             ctx.save();
@@ -105,6 +128,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             //this.drawText(screen.id, screen.x+10,screen.y+10);
             ctx.restore();
         },
+
 
         drawTextButton: function(button) {
 

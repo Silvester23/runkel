@@ -1,5 +1,5 @@
 /*
- * Super-class for all GUI elements
+ * Parent class for all GUI elements
  */
 
 
@@ -28,18 +28,18 @@ define([], function () {
                 canvas.width = this.image.width;
                 canvas.height = this.image.height;
                 var ctx = canvas.getContext('2d');
+                ctx.clearRect(0,0,canvas.width,canvas.height);
                 ctx.drawImage(this.image,0,0);
 
                 var imgdata = ctx.getImageData(x-this.x, y-this.y, 1, 1).data;
                 if (
                     imgdata[0] == 0 &&
-                        imgdata[1] == 0 &&
-                        imgdata[2] == 0 &&
-                        imgdata[3] == 0
+                    imgdata[1] == 0 &&
+                    imgdata[2] == 0 &&
+                    imgdata[3] == 0
                     ){
                     return false;
                 }
-                ctx.clearRect(0,0,canvas.width,canvas.height);
                 return true;
             }
             else {

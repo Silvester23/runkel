@@ -50,11 +50,18 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             });
             this.addEntity(drone);
 
-            lilly = new Item("lilly",12,9);
+            lilly = new Item("Schwertlilie",12,9);
             lilly.setSprite("lilly");
             lilly.setAnimation("idle",50);
             this.addEntity(lilly);
             this.registerEntityPosition(lilly);
+
+
+            lilly2 = new Item("Schwertlilie",3,3);
+            lilly2.setSprite("lilly");
+            lilly2.setAnimation("idle",50);
+            this.addEntity(lilly2);
+            this.registerEntityPosition(lilly2);
 
             this.initCharacters();
         },
@@ -90,7 +97,11 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.player.avatar.onStopPathing(function() {
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
-                        console.log("stopped at item");
+                        if(self.player.pickUp(entity)) {
+                            self.unregisterEntityPosition(entity);
+                            self.removeEntity(entity);
+                        }
+                        console.log(self.player.inventory);
                     }
                 });
             });
@@ -168,7 +179,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             x = evt.clientX - offset[0];
             y = evt.clientY -  offset[1];
 
-            guiElem = this.GUI.findElement(x,y);
+            var guiElem = this.GUI.findElement(x,y);
             if(guiElem) {
                 this.GUI.click(guiElem.id, x, y);
             } else if(this.app.isInBounds(x,y)) {

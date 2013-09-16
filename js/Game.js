@@ -15,6 +15,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.entityGrid = [];
 
             this.map = new Map();
+
             this.GUI = new GUI();
 
             // Create Renderer and updater

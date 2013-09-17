@@ -17,15 +17,29 @@ define(['GUIElement'], function (GUIElement) {
         },
 
         show: function() {
+            if(this.show_callback) {
+                this.show_callback();
+            }
             this.visible = true;
         },
 
         hide: function() {
+            if(this.hide_callback) {
+                this.hide_callback();
+            }
             this.visible = false;
         },
 
-        click: function() {
-            console.log("clicked " + this.id);
+        click: function(evt) {
+
+        },
+
+        onShow: function(callback) {
+            this.show_callback = callback;
+        },
+
+        onHide: function(callback) {
+            this.hide_callback = callback;
         }
     });
     return Screen;

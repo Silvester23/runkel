@@ -5,10 +5,9 @@ define(['Avatar','Item'], function(Avatar,Item) {
 
             game.addEntity(this.avatar);
             this.inventory = [];
-            this.inventorySize = 8;
-
-            this.pickUp(new Item("Heftige Hellebarde",0,0));
-            this.pickUp(new Item("Riesen Rüstung",0,0));
+            this.inventorySize = 12;
+            this.name = "Telefonmann";
+            this.level = 1;
 
         },
 

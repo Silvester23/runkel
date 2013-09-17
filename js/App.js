@@ -1,16 +1,49 @@
 define([], function () {
     var App = Class.extend({
         init: function () {
+            var self = this;
             this.width = 640;
             this.height = 480;
             this.viewport = {}
             this.viewport.width = 640;
             this.viewport.height = 416;
 
+            // Handle User Input
+
+           /* canvas.onclick = function(evt){
+                //self.click(evt);
+                console.log("mouse click");
+            };
+            */
+            canvas.onmousedown = function(evt) {
+                if(self.game.mousedown(evt)) {
+                    console.log("start dragging");
+                }
+            };
+
+            canvas.onmouseup = function(evt) {
+                if(self.game.dragging()) {
+                    console.log("stop dragging");
+                    self.game.dragElement = null;
+                } else {
+                    self.game.click(evt);
+                }
+            };
+
+            canvas.onmousemove = function(evt) {
+                self.game.hover(evt);
+            };
+
+            canvas.oncontextmenu = function(evt) {
+                console.info("right click captured");
+                return false;
+            };
+
         },
 
         setGame: function(game) {
             this.game = game;
+            console.info("Game set");
         },
 
         isInBounds: function(x,y) {
@@ -18,24 +51,6 @@ define([], function () {
         }
 
 
-        /*
-        getClickType: function(x,y) {
-            elems = this.game.GUI.getVisibleElements();
-            if(x >= this.viewport.width || y >= this.viewport.height ) {
-                return Types.Clicks.HUD;
-            }
-            else {
-                var type = Types.Clicks.VIEWPORT;
-                _.each(elems, function(elem) {
-                    if(x >= elem.x && x <= elem.x+elem.width
-                        && y >= elem.y && y<= elem.y+elem.height) {
-                        type = Types.Clicks.HUD;
-                    }
-                });
-                return type;
-            }
-        }
-        */
     });
     return App;
 })

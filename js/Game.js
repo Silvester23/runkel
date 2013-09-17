@@ -16,7 +16,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.map = new Map();
 
-            this.GUI = new GUI();
 
             // Create Renderer and updater
             this.renderer = new Renderer(this);
@@ -26,19 +25,14 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.player = new Player(this);
             this.initPlayer();
 
+
+            this.GUI = new GUI();
+            this.GUI.createInventoryIcons(this.player.inventory);
+
             // Create Pathfinder
             this.pathfinder = new Pathfinder();
 
             this.currentTime = new Date().getTime();
-
-            // Handle User Input
-            canvas.onclick = function(evt){
-                self.click(evt);
-            };
-
-            canvas.onmousemove = function(evt) {
-                self.hover(evt);
-            };
 
 
             this.initEntityGrid();
@@ -57,13 +51,26 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.registerEntityPosition(lilly);
 
 
-            lilly2 = new Item("Schwertlilie",3,3);
+            lilly2 = new Item("Schwertlilie2",3,3);
             lilly2.setSprite("lilly");
             lilly2.setAnimation("idle",50);
             this.addEntity(lilly2);
             this.registerEntityPosition(lilly2);
 
+            lilly4 = new Item("Schwertlilie3",5,3);
+            lilly4.setSprite("lilly");
+            lilly4.setAnimation("idle",50);
+            this.addEntity(lilly4);
+            this.registerEntityPosition(lilly4);
+
+            lilly3 = new Item("Schwertlilie4",4,3);
+            lilly3.setSprite("lilly");
+            lilly3.setAnimation("idle",50);
+            this.addEntity(lilly3);
+            this.registerEntityPosition(lilly3);
+
             this.initCharacters();
+            this.dragElement = null;
         },
 
         updateMaxTiles: function() {
@@ -100,8 +107,11 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                         if(self.player.pickUp(entity)) {
                             self.unregisterEntityPosition(entity);
                             self.removeEntity(entity);
+                            self.GUI.createInventoryIcons(self.player.inventory);
+                            console.log("picked up " + entity.id);
+                        } else {
+                            console.log("could not pick up " + entity.id);
                         }
-                        console.log(self.player.inventory);
                     }
                 });
             });
@@ -170,6 +180,24 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             return this.entityGrid[y][x];
         },
 
+        mousedown: function(evt) {
+            var self = this,
+                offset = getOffset(canvas),
+                x, y, guiElem;
+
+            x = evt.clientX - offset[0];
+            y = evt.clientY -  offset[1];
+
+            guiElem = this.GUI.findElement(x,y)
+            if(guiElem && guiElem.allowDrag) {
+                this.dragElement = guiElem;
+                guiElem.drag(x,y);
+                return true;
+            } else {
+                return false;
+            }
+        },
+
         click: function(evt) {
             // Rework getOffset(canvas) part!
             var self = this,
@@ -203,12 +231,21 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             evtX = evt.clientX - offset[0];
             evtY = evt.clientY -  offset[1];
-            if(!this.GUI.findElement(evtX,evtY) && this.app.isInBounds(evtX,evtY)) {
-                tiles = getTiles([evtX,evtY]);
-                this.curTileX = tiles[0];
-                this.curTileY = tiles[1];
+
+            if(!this.dragging()) {
+                if(!this.GUI.findElement(evtX,evtY) && this.app.isInBounds(evtX,evtY)) {
+                    tiles = getTiles([evtX,evtY]);
+                    this.curTileX = tiles[0];
+                    this.curTileY = tiles[1];
+                }
+            } else {
+                this.dragElement.drag(evtX,evtY);
             }
 
+        },
+
+        dragging: function() {
+            return this.dragElement != null;
         },
 
         start: function() {

@@ -90,26 +90,75 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         },
 
         drawScreen: function(screen) {
+            this.drawStandardScreen(screen);
             switch(screen.id) {
                 case "screen_inventory":
-                    this.drawStandardScreen(screen);
+
                     this.drawInventoryScreen(screen);
                     break;
-                default:
-                    this.drawStandardScreen(screen);
+                case "screen_character":
+                    this.drawCharacterScreen(screen);
                     break;
             }
         },
 
         drawInventoryScreen: function(screen) {
+            var p = this.game.player;
+            var inv = p.inventory;
             var self = this;
             var ctx = this.getContext();
+            var y = screen.y+130;
+            var x = screen.x+50;
+
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            // First, draw inventory grid
+            var slotsize = 48;
+            var maxSlotX = 2;
+            var maxSlotY = 3;
+            for(var i = 0; i <= maxSlotY+1; i++) {
+                ctx.fillRect(x,y+(i*slotsize),slotsize*(maxSlotX+1),1);
+            }
+
+            for(var i = 0; i <= maxSlotX+1; i++) {
+                ctx.fillRect(x+(i*slotsize),y,1,slotsize*(maxSlotY+1));
+            }
+            ctx.restore()
+
+            ctx.fillText("items: " + inv.length, x,y);
+            for(var i = 0; i < inv.length; i++) {
+
+                var row = Math.floor(i / (maxSlotX+1));
+                var col = i % (maxSlotX+1);
+
+                var icon = this.game.GUI.icons["icon_" + inv[i].id];
+                if(typeof icon.x == "undefined") {
+                    var offset = (slotsize-icon.width)/2;
+                    icon.x = x+col*slotsize + offset;
+                }
+                if(typeof icon.y === "undefined") {
+                    var offset = (slotsize-icon.height)/2;
+                    icon.y = y+row*slotsize + offset;
+                }
+                if(icon) {
+                    this.drawInventoryIcon(icon);
+                }
+            }
+
+        },
+
+        drawInventoryIcon: function(icon) {
+            var ctx = this.getContext();
+            ctx.drawImage(icon.entity.sprite.image, icon.x,icon.y);
+        },
+
+        drawCharacterScreen: function(screen) {
+            var ctx = this.getContext();
             var y = screen.y+80;
-            var x = screen.x+30;
-            _.each(this.game.player.inventory, function(item) {
-                self.drawText(item.id, x, y);
-                y += 20;
-            });
+            var x = screen.x+40;
+            this.drawText("Name: " + this.game.player.name, x,y);
+            y += 20;
+            this.drawText("Level: " + this.game.player.level, x,y);
         },
 
         drawStandardScreen: function(screen) {

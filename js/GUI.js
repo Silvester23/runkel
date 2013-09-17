@@ -2,12 +2,13 @@
  * Class to create and manage GUI elements
  */
 
-define(['ImgButton','Screen',
-    '../GUIData/GUIData'], function (ImgButton,Screen) {
+define(['ImgButton','Screen','InventoryIcon',
+    '../GUIData/GUIData'], function (ImgButton,Screen,InventoryIcon) {
     var GUI = Class.extend({
         init: function () {
             this.buttons = {};
             this.screens = {};
+            this.icons = {};
             this.elements = {};
             this.createGUIElements();
         },
@@ -142,11 +143,46 @@ define(['ImgButton','Screen',
         },
 
         createScreen: function(elemData) {
+            var self = this;
             var screen = new Screen(elemData);
+
+            if(elemData.id == "screen_inventory") {
+
+                screen.onShow(function() {
+                    _.each(self.icons, function(icon) {
+                        if(icon instanceof InventoryIcon) {
+                            icon.visible = true;
+                        }
+                    });
+                });
+
+                screen.onHide(function() {
+                    _.each(self.icons, function(icon) {
+                        if(icon instanceof InventoryIcon) {
+                            icon.visible = false;
+                        }
+                    });
+                });
+            }
 
             // Register element in arrays
             this.screens[elemData.id] = screen;
             this.elements[elemData.id] = screen;
+        },
+
+        createInventoryIcons: function(inventory) {
+            var inv = inventory;
+            var self = this;
+            for(var i = 0; i < inv.length; i++) {
+                if(!_.any(self.icons, function(icon) {
+                    return icon.item === inv[i];
+                })) {
+                    var icon = new InventoryIcon(inv[i]);
+                    self.icons[icon.id] = icon;
+                    self.elements[icon.id] = icon;
+
+                }
+            }
         }
     });
     return GUI;

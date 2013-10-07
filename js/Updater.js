@@ -5,97 +5,97 @@ define(['Character'], function (Character) {
 
         },
 
-        update: function() {
+        update: function () {
             this.updateCharacters();
             this.updateAnimations();
             this.updateTransitions();
             this.updateGUI();
         },
 
-        updateGUI: function() {
-            var now = this.game.currentTime
-            _.each(this.game.GUI.elements,function(elem) {
-                if(elem.update) {
+        updateGUI: function () {
+            var now = this.game.currentTime;
+            _.each(this.game.GUI.elements, function (elem) {
+                if (elem.update) {
                     elem.update(now);
                 }
             });
         },
 
-        updateCharacters: function() {
+        updateCharacters: function () {
             var self = this;
 
-            this.game.forEachEntity(function(entity) {
-               if(entity instanceof Character) {
-                   self.updateCharacter(entity);
-               }
+            this.game.forEachEntity(function (entity) {
+                if (entity instanceof Character) {
+                    self.updateCharacter(entity);
+                }
             });
         },
 
-        updateAnimations: function() {
+        updateAnimations: function () {
             var self = this;
             now = this.game.currentTime;
 
 
-            this.game.forEachEntity(function(entity) {
+            this.game.forEachEntity(function (entity) {
                 a = entity.currentAnimation;
 
-                if(a) {
+                if (a) {
                     a.update(now);
                 }
             });
         },
 
-        updateCharacter: function(c) {
+        updateCharacter: function (c) {
             var self = this;
 
-            if(c.update) {
+            if (c.update) {
                 c.update();
             }
 
-            if(c.isMoving() && c.movement.inProgress === false) {
+            if (c.isMoving() && c.movement.inProgress === false) {
 
-                if(c.orientation == Types.Orientations.RIGHT) {
+                if (c.orientation == Types.Orientations.RIGHT) {
                     c.movement.start(this.game.currentTime,
-                                    function(x) {
-                                        c.x = x;
-                                    },
-                                    function() {
-                                        c.x = c.movement.endValue;
-                                        c.nextStep();
-                                    },
-                                    c.x,
-                                    c.x + _TILESIZE,
-                                    c.movespeed);
-                } else if(c.orientation == Types.Orientations.LEFT) {
-                    c.movement.start(this.game.currentTime,
-                        function(x) {
+                        function (x) {
                             c.x = x;
                         },
-                        function() {
+                        function () {
+                            c.x = c.movement.endValue;
+                            c.nextStep();
+                        },
+                        c.x,
+                        c.x + _TILESIZE,
+                        c.movespeed);
+                } else if (c.orientation == Types.Orientations.LEFT) {
+                    c.movement.start(this.game.currentTime,
+                        function (x) {
+                            c.x = x;
+                        },
+                        function () {
                             c.x = c.movement.endValue;
                             c.nextStep();
                         },
                         c.x,
                         c.x - _TILESIZE,
                         c.movespeed);
-                } else if(c.orientation == Types.Orientations.DOWN) {
+                } else if (c.orientation == Types.Orientations.DOWN) {
                     c.movement.start(this.game.currentTime,
-                        function(y) {
+                        function (y) {
                             c.y = y;
                         },
-                        function() {
+                        function () {
                             c.y = c.movement.endValue;
                             c.nextStep();
                         },
                         c.y,
                         c.y + _TILESIZE,
                         c.movespeed);
-                } else if(c.orientation == Types.Orientations.UP) {
+                } else if (c.orientation == Types.Orientations.UP) {
                     c.movement.start(this.game.currentTime,
-                        function(y) {
+                        function (y) {
                             c.y = y;
                         },
-                        function() {
+                        function () {
                             c.y = c.movement.endValue;
                             c.nextStep();
                         },
@@ -106,12 +106,12 @@ define(['Character'], function (Character) {
             }
         },
 
-        updateTransitions: function() {
+        updateTransitions: function () {
             var now = this.game.currentTime;
-            this.game.forEachEntity(function(entity) {
+            this.game.forEachEntity(function (entity) {
                 movement = entity.movement;
-                if(movement) {
-                    if(movement.inProgress) {
+                if (movement) {
+                    if (movement.inProgress) {
                         movement.step(now);
                     }
                 }
@@ -119,18 +119,18 @@ define(['Character'], function (Character) {
         }
 
         /*
-        updateMovement: function() {
-            game.forEachEntity(function(entity) {
-                if(entity instanceof Character) {
-                    c = entity;
-                    if(c.isMoving()) {
+         updateMovement: function() {
+         game.forEachEntity(function(entity) {
+         if(entity instanceof Character) {
+         c = entity;
+         if(c.isMoving()) {
 
-                    }
-                }
-            });
-        } */
+         }
+         }
+         });
+         } */
 
 
     });
     return Updater;
-})
+});

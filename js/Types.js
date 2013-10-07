@@ -32,4 +32,4 @@ Types = {
         VIEWPORT: 1,
         HUD: 2
     }
-}
+};

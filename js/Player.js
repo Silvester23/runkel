@@ -26,7 +26,7 @@ define(['Avatar','Item'], function(Avatar,Item) {
         },
 
         hasFreeInventorySlot: function() {
-            console.log(this.getNumItems())
+            console.log(this.getNumItems());
             return this.getNumItems() < this.inventorySize;
         },
 

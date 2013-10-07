@@ -180,8 +180,9 @@ define(['ImgButton','Screen','InventoryIcon','Table',
                 self = this,
                 table = this.elements["table_inventory"];
             for(var i = 0; i < inv.length; i++) {
-                if(typeof inv[i] !== "undefined" && !_.any(self.icons, function(icon) {
-                    return icon.entity === inv[i];
+                item = inv[i];
+                if(typeof item !== "undefined" && !_.any(self.icons, function(icon) {
+                    return this.entity === item;
                 })) {
 
                     var data = {};
@@ -201,9 +202,9 @@ define(['ImgButton','Screen','InventoryIcon','Table',
                     icon.onRelease(function() {
                         //pos = table.getSnapPosition(this);
                         //icon.setPosition(pos["x"], pos["y"]);
-                        var index = table.getCellIndex(icon);
-                        if(index != icon.cellIndex && index != -1) {
-                            if(typeof inv[index] !== "undefined" && inv[index] !== icon.entity) {
+                        var index = table.getCellIndex(this);
+                        if(index != this.cellIndex && index != -1) {
+                            if(typeof inv[index] !== "undefined" && inv[index] !== this.entity) {
                                 /* There was already a different icon at the index in the table.
                                  * First, change its cellIndex and then move it to the correct position.
                                  * Then, change the cellIndex and position of the released icon.
@@ -212,8 +213,8 @@ define(['ImgButton','Screen','InventoryIcon','Table',
 
                                 try {
                                     iconId = "icon_" + inv[index].id;
-                                    self.icons[iconId].cellIndex = icon.cellIndex;
-                                    pos = table.getCellPosition(self.icons[iconId]);
+                                    self.icons[iconId].cellIndex = this.cellIndex;
+                                    var pos = table.getCellPosition(self.icons[iconId]);
 
 
                                     self.icons[iconId].setPosition(pos["x"],pos["y"]);
@@ -223,19 +224,19 @@ define(['ImgButton','Screen','InventoryIcon','Table',
 
 
 
-                                inv[icon.cellIndex] = inv[index];
-                                icon.cellIndex = index;
-                                inv[index] = icon.entity;
+                                inv[this.cellIndex] = inv[index];
+                                this.cellIndex = index;
+                                inv[index] = this.entity;
 
                             } else {
                                 // The icon has moved to an empty cellindex. Apply change.
-                                delete inv[icon.cellIndex];
-                                inv[index] = icon.entity;
-                                icon.cellIndex = index;
+                                delete inv[this.cellIndex];
+                                inv[index] = this.entity;
+                                this.cellIndex = index;
                             }
                         }
-                        pos = table.getCellPosition(icon);
-                        icon.setPosition(pos["x"],pos["y"]);
+                        pos = table.getCellPosition(this);
+                        this.setPosition(pos["x"],pos["y"]);
                     });
 
 

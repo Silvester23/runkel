@@ -45,6 +45,15 @@ define([], function () {
             else {
                 return true;
             }
+        },
+
+        setPosition: function(x,y) {
+            this.x = x;
+            this.y = y;
+        },
+
+        click: function() {
+            // Do nothing by default
         }
     });
     return GUIElement;

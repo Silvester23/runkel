@@ -20,7 +20,8 @@ Types = {
 
     GUIElements: {
         IMGBUTTON: 1,
-        SCREEN: 2
+        SCREEN: 2,
+        TABLE: 3
     },
 
     Actions: {

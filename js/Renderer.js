@@ -70,12 +70,11 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         },
 
         drawGUI: function() {
-            var self = this;
-            var ctx = this.getContext();
+            var self = this,
+                ctx = this.getContext();
 
             // Draw black footer bar
             ctx.fillRect(0,this.game.app.viewport.height,this.game.app.viewport.width,this.game.app.height-this.game.app.viewport.height);
-
 
             _.each(this.game.GUI.elements, function(elem) {
                 if(elem.visible) {
@@ -103,48 +102,48 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         },
 
         drawInventoryScreen: function(screen) {
-            var p = this.game.player;
-            var inv = p.inventory;
-            var self = this;
-            var ctx = this.getContext();
-            var y = screen.y+130;
-            var x = screen.x+50;
+            var p = this.game.player,
+                inv = p.inventory,
+                table = this.game.GUI.elements["table_inventory"],
+                self = this,
+                ctx = this.getContext(),
+                y = screen.y+90,
+                x = screen.x+50;
 
+            this.drawTable(table);
+            ctx.fillText("items: " + p.getNumItems(), x,y);
+            for(var i = 0; i < inv.length; i++) {
+                try {
+                    if(inv[i]) {
+                        var icon = this.game.GUI.icons["icon_" + inv[i].id];
+                        if(icon) {
+                            this.drawInventoryIcon(icon);
+                        }
+                    }
+                } catch(e) {
+                    console.log("error with icon at inv pos " + i);
+                    throw(e);
+                }
+            }
+
+        },
+
+        drawTable: function(table) {
+            var ctx = this.getContext(),
+                x = table.x,
+                y = table.y;
             ctx.save();
             ctx.globalAlpha = 0.3;
-            // First, draw inventory grid
-            var slotsize = 48;
-            var maxSlotX = 2;
-            var maxSlotY = 3;
-            for(var i = 0; i <= maxSlotY+1; i++) {
-                ctx.fillRect(x,y+(i*slotsize),slotsize*(maxSlotX+1),1);
+
+            //console.log(table);
+            for(var i = 0; i <= table.rows; i++) {
+                ctx.fillRect(x,y+(i*table.cellsize),table.cellsize*(table.cols),1);
             }
 
-            for(var i = 0; i <= maxSlotX+1; i++) {
-                ctx.fillRect(x+(i*slotsize),y,1,slotsize*(maxSlotY+1));
+            for(var i = 0; i <= table.cols; i++) {
+                ctx.fillRect(x+(i*table.cellsize),y,1,table.cellsize*(table.rows));
             }
             ctx.restore()
-
-            ctx.fillText("items: " + inv.length, x,y);
-            for(var i = 0; i < inv.length; i++) {
-
-                var row = Math.floor(i / (maxSlotX+1));
-                var col = i % (maxSlotX+1);
-
-                var icon = this.game.GUI.icons["icon_" + inv[i].id];
-                if(typeof icon.x == "undefined") {
-                    var offset = (slotsize-icon.width)/2;
-                    icon.x = x+col*slotsize + offset;
-                }
-                if(typeof icon.y === "undefined") {
-                    var offset = (slotsize-icon.height)/2;
-                    icon.y = y+row*slotsize + offset;
-                }
-                if(icon) {
-                    this.drawInventoryIcon(icon);
-                }
-            }
-
         },
 
         drawInventoryIcon: function(icon) {

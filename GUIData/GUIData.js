@@ -47,5 +47,18 @@ GUIElements = {
         width: 224,
         height: 416,
         tier: 'main_screen'
+    },
+
+    InventoryTable: {
+        id: "table_inventory",
+        type: Types.GUIElements.TABLE,
+        z: -1,
+        cellsize: 48,
+        rows: 4,
+        cols: 3,
+        position: "relative",
+        align: "center",
+        v_align: "center",
+        parent: "screen_inventory"
     }
 }

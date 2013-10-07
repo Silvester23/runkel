@@ -2,15 +2,24 @@
  * Class to create and manage GUI elements
  */
 
-define(['ImgButton','Screen','InventoryIcon',
-    '../GUIData/GUIData'], function (ImgButton,Screen,InventoryIcon) {
+define(['ImgButton','Screen','InventoryIcon','Table',
+    '../GUIData/GUIData'], function (ImgButton,Screen,InventoryIcon,Table) {
     var GUI = Class.extend({
         init: function () {
             this.buttons = {};
+            this.tables = {};
             this.screens = {};
             this.icons = {};
             this.elements = {};
             this.createGUIElements();
+            this.alignAllElements();
+        },
+
+        alignAllElements: function() {
+            var self = this;
+            _.each(this.elements, function(element) {
+                self.alignElement(element);
+            });
         },
 
         createGUIElements: function() {
@@ -24,14 +33,21 @@ define(['ImgButton','Screen','InventoryIcon',
                     case Types.GUIElements.SCREEN:
                         self.createScreen(elemData);
                         break;
+                    case Types.GUIElements.TABLE:
+                        self.createTable(elemData);
+                        break;
                 }
             });
         },
 
         click: function(elemId, x, y) {
-
-            if(this.elements[elemId]) {
-                this.elements[elemId].click(x, y);
+            try {
+                if(this.elements[elemId]) {
+                    this.elements[elemId].click(x, y);
+                }
+            }
+            catch(e) {
+                console.error("Error trying to click elemId " + elemId);
             }
 
         },
@@ -143,44 +159,123 @@ define(['ImgButton','Screen','InventoryIcon',
         },
 
         createScreen: function(elemData) {
-            var self = this;
             var screen = new Screen(elemData);
-
-            if(elemData.id == "screen_inventory") {
-
-                screen.onShow(function() {
-                    _.each(self.icons, function(icon) {
-                        if(icon instanceof InventoryIcon) {
-                            icon.visible = true;
-                        }
-                    });
-                });
-
-                screen.onHide(function() {
-                    _.each(self.icons, function(icon) {
-                        if(icon instanceof InventoryIcon) {
-                            icon.visible = false;
-                        }
-                    });
-                });
-            }
 
             // Register element in arrays
             this.screens[elemData.id] = screen;
             this.elements[elemData.id] = screen;
         },
 
+        createTable: function(elemData) {
+            var table = new Table(elemData);
+            table.width = table.cellsize * table.cols;
+            table.height = table.cellsize * table.rows;
+
+            this.tables[elemData.id] = table;
+            this.elements[elemData.id] = table;
+        },
+
         createInventoryIcons: function(inventory) {
-            var inv = inventory;
-            var self = this;
+            var inv = inventory,
+                self = this,
+                table = this.elements["table_inventory"];
             for(var i = 0; i < inv.length; i++) {
-                if(!_.any(self.icons, function(icon) {
-                    return icon.item === inv[i];
+                if(typeof inv[i] !== "undefined" && !_.any(self.icons, function(icon) {
+                    return icon.entity === inv[i];
                 })) {
-                    var icon = new InventoryIcon(inv[i]);
+
+                    var data = {};
+                    data["id"] = "icon_" + inv[i].id;
+                    data["allowDrag"] = true;
+                    data["entity"] = inv[i];
+                    data["sprite"] = inv[i].getSprite();
+                    data["width"] = inv[i].sprite.width;
+                    data["height"] = inv[i].sprite.height;
+                    data["z"] = -2;
+                    data["cellIndex"] = i;
+
+                    var icon = new InventoryIcon(data),
+                        pos = table.getCellPosition(icon);
+                    icon.setPosition(pos["x"],pos["y"]);
+
+                    icon.onRelease(function() {
+                        //pos = table.getSnapPosition(this);
+                        //icon.setPosition(pos["x"], pos["y"]);
+                        var index = table.getCellIndex(icon);
+                        if(index != icon.cellIndex && index != -1) {
+                            if(typeof inv[index] !== "undefined" && inv[index] !== icon.entity) {
+                                /* There was already a different icon at the index in the table.
+                                 * First, change its cellIndex and then move it to the correct position.
+                                 * Then, change the cellIndex and position of the released icon.
+                                 * Finally, swap the corresponding items in the inventory array.
+                                 */
+
+                                try {
+                                    iconId = "icon_" + inv[index].id;
+                                    self.icons[iconId].cellIndex = icon.cellIndex;
+                                    pos = table.getCellPosition(self.icons[iconId]);
+
+
+                                    self.icons[iconId].setPosition(pos["x"],pos["y"]);
+                                } catch(e) {
+                                    console.error("Error: could not find " + iconId + " in ",self.icons);
+                                }
+
+
+
+                                inv[icon.cellIndex] = inv[index];
+                                icon.cellIndex = index;
+                                inv[index] = icon.entity;
+
+                            } else {
+                                // The icon has moved to an empty cellindex. Apply change.
+                                delete inv[icon.cellIndex];
+                                inv[index] = icon.entity;
+                                icon.cellIndex = index;
+                            }
+                        }
+                        pos = table.getCellPosition(icon);
+                        icon.setPosition(pos["x"],pos["y"]);
+                    });
+
+
                     self.icons[icon.id] = icon;
                     self.elements[icon.id] = icon;
 
+                }
+            }
+        },
+
+        alignElement: function(element) {
+            var child = element,
+                parent = this.elements[element.parent];
+            if(parent && child.position == "relative") {
+                if(child.align) {
+                    switch(child.align) {
+                        case "center":
+                            child.x = parent.x + (parent.width - child.width)/2;
+                            break;
+                        case "left":
+                            child.x = parent.x;
+                            break;
+                        case "right":
+                            child.x = parent.x + (parent.width - child.width);
+                            break;
+                    }
+                }
+                if(child.v_align) {
+                    switch(child.v_align) {
+                        case "center":
+                            child.y = parent.y + (parent.height - child.height)/2;
+                            break;
+                        case "top":
+                            child.y = parent.y;
+                            break;
+                        case "bottom":
+                            child.y = parent.y + (parent.height - child.height);
+                            break;
+
+                    }
                 }
             }
         }

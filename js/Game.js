@@ -54,18 +54,21 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             lilly2 = new Item("Schwertlilie2",3,3);
             lilly2.setSprite("lilly");
             lilly2.setAnimation("idle",50);
+            lilly2.sprite.image.src = "img/lilly_red.png"
             this.addEntity(lilly2);
             this.registerEntityPosition(lilly2);
 
             lilly4 = new Item("Schwertlilie3",5,3);
             lilly4.setSprite("lilly");
             lilly4.setAnimation("idle",50);
+            lilly4.sprite.image.src = "img/lilly_yellow.png"
             this.addEntity(lilly4);
             this.registerEntityPosition(lilly4);
 
             lilly3 = new Item("Schwertlilie4",4,3);
             lilly3.setSprite("lilly");
             lilly3.setAnimation("idle",50);
+            lilly3.sprite.image.src = "img/lilly_blue.png"
             this.addEntity(lilly3);
             this.registerEntityPosition(lilly3);
 
@@ -105,10 +108,10 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
                         if(self.player.pickUp(entity)) {
+                            console.log("picking up " + entity.id);
                             self.unregisterEntityPosition(entity);
                             self.removeEntity(entity);
                             self.GUI.createInventoryIcons(self.player.inventory);
-                            console.log("picked up " + entity.id);
                         } else {
                             console.log("could not pick up " + entity.id);
                         }
@@ -191,6 +194,10 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             guiElem = this.GUI.findElement(x,y)
             if(guiElem && guiElem.allowDrag) {
                 this.dragElement = guiElem;
+                guiElem.dragStartX = x;
+                guiElem.dragStartY = y;
+                guiElem.dragOriginX = guiElem.x;
+                guiElem.dragOriginY = guiElem.y;
                 guiElem.drag(x,y);
                 return true;
             } else {

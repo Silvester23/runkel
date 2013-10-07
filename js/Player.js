@@ -13,7 +13,12 @@ define(['Avatar','Item'], function(Avatar,Item) {
 
         pickUp: function(item) {
             if(item instanceof Item && this.hasFreeInventorySlot()) {
-                this.inventory.push(item);
+                for(var i = 0; i < this.inventorySize; i++) {
+                    if(typeof this.inventory[i] === "undefined") {
+                        break;
+                    }
+                }
+                this.inventory[i] = item;
                 return true;
             } else {
                 return false;
@@ -21,7 +26,12 @@ define(['Avatar','Item'], function(Avatar,Item) {
         },
 
         hasFreeInventorySlot: function() {
-            return this.inventory.length < this.inventorySize;
+            console.log(this.getNumItems())
+            return this.getNumItems() < this.inventorySize;
+        },
+
+        getNumItems: function() {
+            return _.filter(this.inventory, function(entity) { return typeof entity !== "undefined"}).length;
         }
 
         });

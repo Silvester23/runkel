@@ -17,15 +17,24 @@ define([], function () {
             */
             canvas.onmousedown = function(evt) {
                 if(self.game.mousedown(evt)) {
-                    console.log("start dragging");
                 }
             };
 
             canvas.onmouseup = function(evt) {
-                if(self.game.dragging()) {
+                /*if(self.game.dragging()) {
                     console.log("stop dragging");
                     self.game.dragElement = null;
-                } else {
+                } */
+            };
+
+            canvas.onclick = function(evt) {
+                if(self.game.dragging()) {
+                    if(self.game.dragElement.release) {
+                        self.game.dragElement.release();
+                    }
+                    self.game.dragElement = null;
+                }
+                else {
                     self.game.click(evt);
                 }
             };

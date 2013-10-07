@@ -17,6 +17,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.map = new Map();
 
 
+
             // Create Renderer and updater
             this.renderer = new Renderer(this);
             this.updater = new Updater(this);

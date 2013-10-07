@@ -7,5 +7,6 @@ requirejs(['App', 'Game'],
         game = new Game(app);
         app.setGame(game);
         game.start();
+
     }
 );

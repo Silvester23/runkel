@@ -5,6 +5,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             var self = this;
             this.app = app;
 
+
             // Viewport boundaries
             this.curTileX = -1;
             this.curTileY = -1;
@@ -54,21 +55,21 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             lilly2 = new Item("Schwertlilie2",3,3);
             lilly2.setSprite("lilly");
             lilly2.setAnimation("idle",50);
-            lilly2.sprite.image.src = "img/lilly_red.png"
+            lilly2.sprite.image.src = "img/lilly_red.png";
             this.addEntity(lilly2);
             this.registerEntityPosition(lilly2);
 
             lilly4 = new Item("Schwertlilie3",5,3);
             lilly4.setSprite("lilly");
             lilly4.setAnimation("idle",50);
-            lilly4.sprite.image.src = "img/lilly_yellow.png"
+            lilly4.sprite.image.src = "img/lilly_yellow.png";
             this.addEntity(lilly4);
             this.registerEntityPosition(lilly4);
 
             lilly3 = new Item("Schwertlilie4",4,3);
             lilly3.setSprite("lilly");
             lilly3.setAnimation("idle",50);
-            lilly3.sprite.image.src = "img/lilly_blue.png"
+            lilly3.sprite.image.src = "img/lilly_blue.png";
             this.addEntity(lilly3);
             this.registerEntityPosition(lilly3);
 
@@ -191,7 +192,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             x = evt.clientX - offset[0];
             y = evt.clientY -  offset[1];
 
-            guiElem = this.GUI.findElement(x,y)
+            guiElem = this.GUI.findElement(x, y);
             if(guiElem && guiElem.allowDrag) {
                 this.dragElement = guiElem;
                 guiElem.dragStartX = x;
@@ -275,8 +276,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         reset: function() {
-            this.hideEndScreen();
-
             // Clear entities
             this.entities.length = 0;
 

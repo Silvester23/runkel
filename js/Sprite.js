@@ -24,7 +24,7 @@ define(['sprites','Animation'], function(sprites,Animation) {
              }
 
              return animations;
-         },
+         }
         });
     return Sprite;
 });

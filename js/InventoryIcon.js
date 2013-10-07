@@ -4,7 +4,7 @@ define(['GUIElement'], function (GUIElement) {
             this._super(data);
         },
 
-        drag: function(x,y) {
+        drag: function (x, y) {
 
             this.x = this.dragOriginX + x - this.dragStartX;
             this.y = this.dragOriginY + y - this.dragStartY;
@@ -12,15 +12,15 @@ define(['GUIElement'], function (GUIElement) {
             //console.log("dragging to ", x, y);
         },
 
-        release: function() {
-            if(this.release_callback) {
+        release: function () {
+            if (this.release_callback) {
                 this.release_callback();
             }
         },
 
-        onRelease: function(callback) {
+        onRelease: function (callback) {
             this.release_callback = callback;
         }
     });
     return InventoryIcon;
-})
+});

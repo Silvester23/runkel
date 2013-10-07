@@ -7,7 +7,7 @@ define([], function () {
             this.inProgress = false;
         },
 
-        start: function(currentTime, updateFunction, stopFunction, startValue, endValue, duration) {
+        start: function (currentTime, updateFunction, stopFunction, startValue, endValue, duration) {
             this.startTime = currentTime;
             this.updateFunction = updateFunction;
             this.stopFunction = stopFunction;
@@ -17,11 +17,11 @@ define([], function () {
             this.inProgress = true;
         },
 
-        step: function(currentTime) {
-            if(this.inProgress) {
+        step: function (currentTime) {
+            if (this.inProgress) {
                 var elapsed = currentTime - this.startTime;
 
-                if(elapsed > this.duration) {
+                if (elapsed > this.duration) {
                     elapsed = this.duration;
                 }
 
@@ -30,21 +30,21 @@ define([], function () {
 
                 i = Math.round(i);
 
-                if(elapsed === this.duration || i === this.endValue) {
+                if (elapsed === this.duration || i === this.endValue) {
                     this.stop();
-                    if(this.stopFunction) {
+                    if (this.stopFunction) {
                         this.stopFunction();
                     }
                 }
-                else if(this.updateFunction) {
+                else if (this.updateFunction) {
                     this.updateFunction(i);
                 }
             }
         },
 
-        stop: function() {
+        stop: function () {
             this.inProgress = false;
         }
     });
     return Transition;
-})
+});

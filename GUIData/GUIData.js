@@ -61,4 +61,4 @@ GUIElements = {
         v_align: "center",
         parent: "screen_inventory"
     }
-}
+};

@@ -5,7 +5,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             var self = this;
             this.app = app;
 
-
             // Viewport boundaries
             this.curTileX = -1;
             this.curTileY = -1;

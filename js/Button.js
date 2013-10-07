@@ -4,15 +4,15 @@ define(['GUIElement'], function (GUIElement) {
             this._super(data);
         },
 
-        onClick: function(callback) {
+        onClick: function (callback) {
             this.click_callback = callback;
         },
 
-        click: function() {
-            if(this.click_callback) {
+        click: function () {
+            if (this.click_callback) {
                 this.click_callback();
             }
         }
     });
     return Button;
-})
+});

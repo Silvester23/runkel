@@ -6,13 +6,13 @@ define([], function () {
             this.start = start;
         },
 
-        step: function() {
+        step: function () {
             return this.directions.pop();
         },
 
-        hasStep: function() {
+        hasStep: function () {
             return this.directions.length > 0;
         }
     });
     return Path;
-})
+});

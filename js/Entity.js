@@ -1,68 +1,68 @@
 define(['Sprite'], function(Sprite) {
     var Entity = Class.extend({
-        init: function(id, x, y) {
+        init: function (id, x, y) {
             this.x = _TILESIZE * x;
             this.y = _TILESIZE * y;
 
             this.tileX = x;
             this.tileY = y;
             this.id = id;
-            
+
             // Visuals
             this.sprite = null;
             this.animations = null;
             this.currentAnimation = null;
             this.destroy = false;
         },
-        
-        setPosition: function(x,y) {
+
+        setPosition: function (x, y) {
             this.x = x;
             this.y = y;
         },
 
-        setGridPosition: function(tileX, tileY) {
+        setGridPosition: function (tileX, tileY) {
             this.setPosition(tileX * _TILESIZE, tileY * _TILESIZE);
             this.tileX = tileX;
             this.tileY = tileY;
         },
 
-        getGridPosition: function() {
+        getGridPosition: function () {
             return [this.tileX, this.tileY];
         },
-        
-        setSprite: function(name) {
+
+        setSprite: function (name) {
             sprite = new Sprite(name);
-            if(this.sprite && this.sprite === sprite) {
+            if (this.sprite && this.sprite === sprite) {
                 return;
             }
-            
+
             this.sprite = sprite;
-            
+
             this.animations = sprite.createAnimations();
         },
-        
-        getSprite: function() {
+
+        getSprite: function () {
             return this.sprite;
         },
-        
-        setAnimation: function(name, speed) {
+
+        setAnimation: function (name, speed) {
             a = this.getAnimationByName(name);
 
-            if(typeof speed === 'undefined') {
+            if (typeof speed === 'undefined') {
                 console.error("No animation speed specified");
             }
-            
-            if(a) {
+
+            if (a) {
                 this.currentAnimation = a;
                 this.currentAnimation.setSpeed(speed);
             }
-       },
-       
-       
-       getAnimationByName: function(name) {
+        },
+
+
+        getAnimationByName: function (name) {
             var animation = null;
-        
-            if(name in this.animations) {
+
+            if (name in this.animations) {
                 animation = this.animations[name];
             }
             else {
@@ -70,12 +70,12 @@ define(['Sprite'], function(Sprite) {
             }
             return animation;
         },
-        
-        setDestroy: function(v) {
+
+        setDestroy: function (v) {
             this.destroy = v;
         }
-           
-    })
+
+    });
     
 return Entity;
 });

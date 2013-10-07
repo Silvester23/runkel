@@ -49,8 +49,8 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             if(game.curTileX >= 0 && game.curTileX <= game.maxTileX
                 && game.curTileY >= 0 && game.curTileY <= game.maxTileY) {
 
-                var x = game.curTileX;
-                var y = game.curTileY;
+                var x = game.curTileX,
+                    y = game.curTileY;
                 ctx.save();
                 ctx.strokeStyle = "blue";
                 ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
@@ -58,8 +58,8 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
 
                 p = this.game.player.avatar.path;
                 if(p !== null) {
-                    var x = p[p.length-1][0];
-                    var y = p[p.length-1][1];
+                    x = p[p.length-1][0];
+                    y = p[p.length-1][1];
                     ctx.save();
                     ctx.strokeStyle = "red";
                     ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
@@ -140,7 +140,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.fillRect(x,y+(i*table.cellsize),table.cellsize*(table.cols),1);
             }
 
-            for(var i = 0; i <= table.cols; i++) {
+            for(i = 0; i <= table.cols; i++) {
                 ctx.fillRect(x+(i*table.cellsize),y,1,table.cellsize*(table.rows));
             }
             ctx.restore()
@@ -229,15 +229,15 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         },
         
         drawText: function(text, x, y, font, align, ctx) {
-            var font = typeof font !== 'undefined' ? font : '15px Courier';
-            var ctx = typeof ctx !== 'undefined' ? ctx : this.getContext();
+            var font = typeof font !== 'undefined' ? font : '15px Courier',
+                ctx = typeof ctx !== 'undefined' ? ctx : this.getContext();
             ctx.save();
             if(typeof align !== 'undefined') {
                 ctx.textAlign = align;
             }
             ctx.font = font;
             ctx.fillStyle = "black";
-            ctx.fillText(text,x,y)
+            ctx.fillText(text, x, y);
             ctx.restore();
 
         },

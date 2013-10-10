@@ -1,9 +1,7 @@
 define(['Avatar','Item'], function(Avatar,Item) {
     var Player = Class.extend({
-        init: function(game) {
-            this.avatar = new Avatar("avatar");
-
-            game.addEntity(this.avatar);
+        init: function(id) {
+            this.id = id;
             this.inventory = [];
             this.inventorySize = 12;
             this.name = "Telefonmann";
@@ -32,6 +30,10 @@ define(['Avatar','Item'], function(Avatar,Item) {
 
         getNumItems: function() {
             return _.filter(this.inventory, function(entity) { return typeof entity !== "undefined"}).length;
+        },
+
+        createAvatar: function(id) {
+            this.avatar = new Avatar("avatar");
         }
 
         });

@@ -1,5 +1,5 @@
-define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient',
-    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient) {
+define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient','Avatar',
+    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient,Avatar) {
     var Game = Class.extend({
         init: function(app) {
             var self = this;
@@ -20,18 +20,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.renderer = new Renderer(this);
             this.updater = new Updater(this);
 
-            // Create Player
-
-            this.player = new Player(this);
-            this.initPlayer();
-
-
-            this.gameclient = new Gameclient(this);
-            this.gameclient.connect();
-
-
             this.GUI = new GUI();
-            this.GUI.createInventoryIcons(this.player.inventory);
 
             // Create Pathfinder
             this.pathfinder = new Pathfinder();
@@ -41,6 +30,17 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.initEntityGrid();
 
+            this.initCharacters();
+            this.dragElement = null;
+
+            this.createTestEntities();
+
+            this.connect();
+        },
+
+        // Test and Debug function!
+        createTestEntities: function() {
+            var self = this;
             // TESTS
             drone = new Drone("drone");
             drone.onRequestPathTo(function(src,dest) {
@@ -75,9 +75,36 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             lilly3.sprite.image.src = "img/lilly_blue.png";
             this.addEntity(lilly3);
             this.registerEntityPosition(lilly3);
+        },
 
-            this.initCharacters();
-            this.dragElement = null;
+        connect: function() {
+            var self = this;
+            this.client = new Gameclient(this);
+
+            this.client.onWelcome(function(id) {
+                self.player = new Player(id);
+                self.initPlayer(id);
+                self.GUI.createInventoryIcons(self.player.inventory);
+                self.addEntity(self.player.avatar);
+            })
+
+            this.client.onSpawn(function(id) {
+                var a = new Avatar(id);
+                self.addEntity(a);
+            })
+
+            this.client.onDespawn(function(data) {
+                var id = data[1];
+                if(self.entities[id]) {
+                    console.log("Received despawn request on entity ID " + id);
+                    self.removeEntity(self.entities[id]);
+                } else {
+                    console.log("Invalid despawn request on entity ID " + id);
+                }
+            })
+            this.client.connect();
+
+            this.start();
         },
 
         updateMaxTiles: function() {
@@ -105,9 +132,9 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             });
         },
 
-        initPlayer: function() {
+        initPlayer: function(id) {
             var self = this;
-
+            this.player.createAvatar(id);
             this.player.avatar.onStopPathing(function() {
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
@@ -116,11 +143,25 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                             self.unregisterEntityPosition(entity);
                             self.removeEntity(entity);
                             self.GUI.createInventoryIcons(self.player.inventory);
+                            self.client.sendPickup(entity);
                         } else {
                             console.log("could not pick up " + entity.id);
                         }
                     }
                 });
+            });
+
+            this.registerEntityPosition(this.player.avatar);
+            this.player.avatar.onStep(function() {
+                self.registerEntityPosition(self.player.avatar);
+            });
+
+            this.player.avatar.onBeforeStep(function() {
+                self.unregisterEntityPosition(self.player.avatar);
+            });
+
+            this.player.avatar.onRequestPathTo(function(src,dest) {
+                return self.pathfinder.findPath(src,dest);
             });
         },
 
@@ -288,10 +329,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         start: function() {
-            // Set all stop-variables to false
-            this.isStopped = false;
-            this.stopping = false;
-
+            this.started = true;
 
             this.tick();
 
@@ -306,24 +344,18 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.isStopped = true;
         },
 
-        reset: function() {
-            // Clear entities
-            this.entities.length = 0;
-
-            this.player.reset();
-            this.start();
-        },
-
         tick: function() {
             // Loop function
-            this.currentTime = new Date().getTime();
+            if(this.started) {
+                this.currentTime = new Date().getTime();
 
-            this.updater.update();
-            this.renderer.renderFrame();
+                this.updater.update();
+                this.renderer.renderFrame();
 
-            // Loop if game is running
-            if(!this.isStopped) {
-                requestAnimFrame(this.tick.bind(this));
+                // Loop if game is running
+                if(!this.isStopped) {
+                    requestAnimFrame(this.tick.bind(this));
+                }
             }
         }
 

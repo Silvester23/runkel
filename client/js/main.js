@@ -6,7 +6,6 @@ requirejs(['App', 'Game'],
         app = new App();
         game = new Game(app);
         app.setGame(game);
-        game.start();
         // TEST
     }
 );

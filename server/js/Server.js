@@ -1,4 +1,4 @@
-var Class = require("./lib/class.js").Class,
+var Class = require("./lib/class.js"),
     url = require("url"),
     http = require("http"),
     fs = require("fs"),
@@ -23,7 +23,6 @@ var Server = Class.extend({
         server.listen(8000);
 
         app.get( '/shared/:filename', function( req, res) {
-            console.log("..");
             res.sendfile(req.params.filename, {root: "../../shared/"});
         });
 
@@ -58,7 +57,15 @@ var Server = Class.extend({
         io.sockets.on('connection', function (socket) {
             var c = new Connection(socket, self);
             self.addConnection(c);
+            if(self.connect_callback) {
+                self.connect_callback(c);
+            }
         });
+
+    },
+
+    onConnect: function(callback) {
+        this.connect_callback = callback;
     },
 
     removeConnection: function(id) {
@@ -67,7 +74,6 @@ var Server = Class.extend({
 
     addConnection: function(c) {
         this.connections[c.id] = c;
-        console.log(_.size(this.connections));
     },
 
 
@@ -89,10 +95,19 @@ var Connection = Class.extend({
 
 
         this.socket.on('message', function(data) {
-            console.log("message received");
+            console.log("Message received.");
+            if(self.message_callback) {
+                var message = JSON.parse(data);
+                self.message_callback(message);
+            }
         });
 
         this.socket.on('disconnect', function () {
+
+            if(self.disconnect_callback) {
+                self.disconnect_callback();
+            }
+
             self.server.removeConnection(this.id);
             console.log('Client id ' + this.id + " disconnected.");
         });
@@ -101,10 +116,25 @@ var Connection = Class.extend({
     },
 
     send: function(msg) {
-        data = JSON.stringify(msg);
+        console.log(msg);
+        var data = JSON.stringify(msg);
         this.socket.send(data);
+    },
+
+    close: function(reason) {
+        reason = typeof reason === "undefined" ? "" : reason;
+        console.log("Closing connection to Client-ID " + this.id + ". Reason: " + reason);
+        this.socket.disconnect();
+    },
+
+    onDisconnect: function(callback) {
+        this.disconnect_callback = callback;
+    },
+
+    listen: function(callback) {
+        this.message_callback = callback;
     }
 
 });
 
-exports.Server = Server;
+module.exports = Server;

@@ -6,7 +6,6 @@ define(['ImgButton','Screen','InventoryIcon','Table',
     '../GUIData/GUIData'], function (ImgButton,Screen,InventoryIcon,Table) {
     var GUI = Class.extend({
         init: function () {
-            console.log(Types);
             this.buttons = {};
             this.tables = {};
             this.screens = {};
@@ -209,8 +208,6 @@ define(['ImgButton','Screen','InventoryIcon','Table',
                     var icon = new InventoryIcon(data),
                         pos = table.getCellPosition(icon);
                     icon.setPosition(pos["x"],pos["y"]);
-
-                    console.log(pos);
 
                     icon.onRelease(function() {
                         var index = table.getCellIndex(this);

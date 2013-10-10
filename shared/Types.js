@@ -17,8 +17,12 @@ Types = {
     },
 
     Messages: {
-        WELCOME: 1,
-        SPAWN: 2
+        HELLO: 1,
+        WELCOME: 2,
+        SPAWN: 3,
+        MESSAGE: 4,
+        DESPAWN: 5,
+        PICKUP: 6
     },
 
     ButtonStates: {
@@ -42,3 +46,7 @@ Types = {
         HUD: 2
     }
 };
+
+if(!(typeof exports === 'undefined')) {
+    module.exports = Types;
+}

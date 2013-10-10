@@ -46,11 +46,11 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
 
         drawTileHover: function() {
             var ctx = this.getContext();
-            if(game.curTileX >= 0 && game.curTileX <= game.maxTileX
-                && game.curTileY >= 0 && game.curTileY <= game.maxTileY) {
+            if(this.game.curTileX >= 0 && this.game.curTileX <= this.game.maxTileX
+                && this.game.curTileY >= 0 && this.game.curTileY <= this.game.maxTileY) {
 
-                var x = game.curTileX,
-                    y = game.curTileY;
+                var x = this.game.curTileX,
+                    y = this.game.curTileY;
                 ctx.save();
                 ctx.strokeStyle = "blue";
                 ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
@@ -222,7 +222,12 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             
             context.save();
             context.translate(dx,dy);
-            context.drawImage(sprite.image, x, y, w, h, 0, 0, w, h);
+            try {
+                context.drawImage(sprite.image, x, y, w, h, 0, 0, w, h);
+            } catch(e) {
+                console.log(entity);
+                throw(e);
+            }
             context.restore();
             
         },

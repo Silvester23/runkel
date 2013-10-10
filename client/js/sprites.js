@@ -7,5 +7,5 @@ define(['text!../sprites/ball.json','text!../sprites/avatar.json','text!../sprit
         sprites[sprite.id] = sprite;
     });
     
-    return sprites
+    return sprites;
 });

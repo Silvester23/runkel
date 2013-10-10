@@ -112,19 +112,18 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
 
             this.drawTable(table);
             ctx.fillText("items: " + p.getNumItems(), x,y);
-            for(var i = 0; i < inv.length; i++) {
+
+            _.each(inv, function(item) {
                 try {
-                    if(inv[i]) {
-                        var icon = this.game.GUI.icons["icon_" + inv[i].id];
-                        if(icon) {
-                            this.drawInventoryIcon(icon);
-                        }
+                    var icon = this.game.GUI.icons["icon_" + item.id];
+                    if(icon) {
+                        self.drawInventoryIcon(icon);
                     }
                 } catch(e) {
                     console.log("error with icon at inv pos " + i);
                     throw(e);
                 }
-            }
+            });
 
         },
 

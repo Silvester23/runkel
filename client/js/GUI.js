@@ -6,6 +6,7 @@ define(['ImgButton','Screen','InventoryIcon','Table',
     '../GUIData/GUIData'], function (ImgButton,Screen,InventoryIcon,Table) {
     var GUI = Class.extend({
         init: function () {
+            console.log(Types);
             this.buttons = {};
             this.tables = {};
             this.screens = {};
@@ -189,25 +190,27 @@ define(['ImgButton','Screen','InventoryIcon','Table',
             var inv = inventory,
                 self = this,
                 table = this.elements["table_inventory"];
-            for(var i = 0; i < inv.length; i++) {
-                item = inv[i];
+
+            _.each(inv, function(item) {
                 if(typeof item !== "undefined" && !_.any(self.icons, function(icon) {
                     return this.entity === item;
                 })) {
 
                     var data = {};
-                    data["id"] = "icon_" + inv[i].id;
+                    data["id"] = "icon_" + item.id;
                     data["allowDrag"] = true;
-                    data["entity"] = inv[i];
-                    data["sprite"] = inv[i].getSprite();
-                    data["width"] = inv[i].sprite.width;
-                    data["height"] = inv[i].sprite.height;
+                    data["entity"] = item;
+                    data["sprite"] = item.getSprite();
+                    data["width"] = item.sprite.width;
+                    data["height"] = item.sprite.height;
                     data["z"] = -2;
-                    data["cellIndex"] = i;
+                    data["cellIndex"] = _.indexOf(inv,item);
 
                     var icon = new InventoryIcon(data),
                         pos = table.getCellPosition(icon);
                     icon.setPosition(pos["x"],pos["y"]);
+
+                    console.log(pos);
 
                     icon.onRelease(function() {
                         var index = table.getCellIndex(this);
@@ -249,7 +252,8 @@ define(['ImgButton','Screen','InventoryIcon','Table',
                     self.elements[icon.id] = icon;
 
                 }
-            }
+            });
+
         },
 
         alignElement: function(element) {

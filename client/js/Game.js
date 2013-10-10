@@ -1,5 +1,5 @@
-define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item',
-    'Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item) {
+define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient',
+    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient) {
     var Game = Class.extend({
         init: function(app) {
             var self = this;
@@ -21,8 +21,13 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.updater = new Updater(this);
 
             // Create Player
+
             this.player = new Player(this);
             this.initPlayer();
+
+
+            this.gameclient = new Gameclient(this);
+            this.gameclient.connect();
 
 
             this.GUI = new GUI();

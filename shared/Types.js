@@ -16,6 +16,11 @@ Types = {
         }
     },
 
+    Messages: {
+        WELCOME: 1,
+        SPAWN: 2
+    },
+
     ButtonStates: {
         BASE: "base",
         DOWN: "down",

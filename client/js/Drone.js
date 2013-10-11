@@ -4,8 +4,6 @@ define(['Character'], function (Character) {
             this._super(id, 10, 10);
             this.setSprite("ball");
             this.setAnimation("idle_down", 5);
-
-            this.type = Types.Entities.Characters.DRONE;
             this.lastTime = new Date().getTime();
         },
 

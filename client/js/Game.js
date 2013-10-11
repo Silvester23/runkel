@@ -89,8 +89,8 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 self.initPlayer(id);
                 self.GUI.createInventoryIcons(self.player.inventory);
 
-                self.initCharacter(self.player.avatar);
-                self.addEntity(self.player.avatar);
+                self.initCharacter(self.player);
+                self.addEntity(self.player);
             })
 
             this.client.onSpawnCharacter(function(id,x,y) {
@@ -175,7 +175,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
         initPlayer: function(id) {
             var self = this;
-            this.player.avatar.onStopPathing(function() {
+            this.player.onStopPathing(function() {
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
                         if(self.player.pickUp(entity)) {
@@ -191,16 +191,16 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 });
             });
 
-            this.registerEntityPosition(this.player.avatar);
-            this.player.avatar.onStep(function() {
-                self.registerEntityPosition(self.player.avatar);
+            this.registerEntityPosition(this.player);
+            this.player.onStep(function() {
+                self.registerEntityPosition(self.player);
             });
 
-            this.player.avatar.onBeforeStep(function() {
-                self.unregisterEntityPosition(self.player.avatar);
+            this.player.onBeforeStep(function() {
+                self.unregisterEntityPosition(self.player);
             });
 
-            this.player.avatar.onRequestPathTo(function(src,dest) {
+            this.player.onRequestPathTo(function(src,dest) {
                 return self.pathfinder.findPath(src,dest);
             });
         },
@@ -326,7 +326,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                     console.log("clicked " + target.id);
                 }
 
-                this.player.avatar.walkTo(tiles);
+                this.player.walkTo(tiles);
                 this.client.sendMove(this.player.id,tiles[0],tiles[1]);
             }
         },

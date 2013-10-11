@@ -20,8 +20,8 @@ Messages.Welcome = Message.extend({
 });
 
 Messages.Spawn = Message.extend({
-    init: function(id,kind,x,y) {
-        this.data = [Types.Messages.SPAWN,id,kind,x,y];
+    init: function(id,type,x,y) {
+        this.data = [Types.Messages.SPAWN,id,type,x,y];
     }
 });
 

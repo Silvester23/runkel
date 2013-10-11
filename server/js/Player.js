@@ -1,21 +1,23 @@
 var Messages = require("./Message.js"),
-    Class = require("./lib/class.js");
+    Class = require("./lib/class.js"),
+    Avatar = require("./Avatar.js"),
+    Types = require("../../shared/Types.js")
+    _ = require("underscore");
 
 
 
-var Player = Class.extend({
+var Player = Avatar.extend({
     init: function(connection, world) {
+        // Make player's avatar spawn at random position
+        var x = Math.ceil(_.random(19)),
+            y = Math.ceil(_.random(12));
+
+        this._super(connection.id,Types.Entities.Characters.AVATAR,x,y);
         var self = this;
 
-        this.id = connection.id;
         this.connection = connection;
         this.world = world;
         this.helloReceived = false;
-
-
-        // Make player spawn at random position
-        this.x = Math.ceil(Math.random()*19);
-        this.y = Math.ceil(Math.random()*12);
 
         this.connection.listen(function(data) {
             var action = data[0];
@@ -42,7 +44,8 @@ var Player = Class.extend({
                     x = data[2],
                     y = data[3];
                 console.log("Received move");
-                self.world.pushBroadcast(new Messages.Move(id,x,y).data);
+                self.world.pushBroadcast(new Messages.Move(id,x,y).data, self.id);
+                self.setPosition(x,y);
             }
         });
 

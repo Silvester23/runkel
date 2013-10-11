@@ -56,7 +56,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
                 ctx.restore();
 
-                p = this.game.player.avatar.path;
+                p = this.game.player.path;
                 if(p !== null) {
                     x = p[p.length-1][0];
                     y = p[p.length-1][1];
@@ -184,7 +184,12 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
         drawImgButton: function(button) {
             var ctx = this.getContext();
             ctx.save();
-            ctx.drawImage(button.image,button.x,button.y);
+            try {
+                ctx.drawImage(button.image,button.x,button.y);
+            } catch(e) {
+                console.log(button);
+                throw(e)
+            }
             ctx.restore();
         },
         

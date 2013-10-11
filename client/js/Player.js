@@ -1,14 +1,14 @@
 define(['Avatar','Item'], function(Avatar,Item) {
-    var Player = Class.extend({
+    var Player = Avatar.extend({
         init: function(id,x,y) {
-            console.log(x,y);
-            this.id = id;
+            this._super(id,x,y);
             this.inventory = [];
             this.inventorySize = 12;
-            this.name = "Telefonmann";
-            this.level = 1;
 
-            this.avatar = new Avatar(id,x,y);
+            var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"]
+
+            this.name = names[_.random(names.length)];
+            this.level = 1;
         },
 
         pickUp: function(item) {

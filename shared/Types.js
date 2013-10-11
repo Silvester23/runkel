@@ -50,14 +50,14 @@ Types = {
 };
 
 
-Types.isEntity = function(kind) {
+Types.isEntity = function(type) {
     return _.some(Types.Entities, function(cat) {
-        return _.contains(cat,kind);
+        return _.contains(cat,type);
     });
 }
 
-Types.isCharacter = function(kind) {
-    return _.contains(Types.Entities.Characters,kind);
+Types.isCharacter = function(type) {
+    return _.contains(Types.Entities.Characters,type);
 }
 
 if(!(typeof exports === 'undefined')) {

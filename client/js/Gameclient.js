@@ -45,10 +45,10 @@ define([], function () {
 
         receiveSpawn: function(data) {
             var id = data[1],
-                kind = data[2],
+                type = data[2],
                 x = data[3],
                 y = data[4];
-            if(Types.isCharacter(kind)) {
+            if(Types.isCharacter(type)) {
                 if(this.spawn_character_callback) {
                     this.spawn_character_callback(id,x,y);
                 }

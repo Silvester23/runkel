@@ -1,6 +1,7 @@
 var Class = require("./lib/class.js"),
     Messages = require("./Message.js"),
-    _ = require("underscore");
+    _ = require("underscore"),
+    Types = require("../../shared/Types.js");
 
 
 var Worldserver = Class.extend({
@@ -60,12 +61,12 @@ var Worldserver = Class.extend({
         // Could be moved to a callback
 
         // Announce connection to other players
-        this.pushBroadcast(new Messages.Spawn(player.id).data, player.id);
+        this.pushBroadcast(new Messages.Spawn(player.id, Types.Entities.Characters.AVATAR, player.x, player.y).data, player.id);
 
         // Announce other players to connecting player
         _.each(this.players, function(p) {
             if(p.id !== player.id) {
-                self.pushToPlayer(player, new Messages.Spawn(p.id).data);
+                self.pushToPlayer(player, new Messages.Spawn(p.id, Types.Entities.Characters.AVATAR, p.x, p.y).data);
             }
         })
     },

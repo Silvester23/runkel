@@ -86,11 +86,13 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 self.initPlayer(id);
                 self.GUI.createInventoryIcons(self.player.inventory);
                 self.addEntity(self.player.avatar);
+                console.log("added player and avatar");
             })
 
             this.client.onSpawn(function(id) {
                 var a = new Avatar(id);
                 self.addEntity(a);
+                console.log("spawned");
             })
 
             this.client.onDespawn(function(data) {

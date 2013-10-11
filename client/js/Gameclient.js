@@ -2,13 +2,11 @@ define([], function () {
     var Gameclient = Class.extend({
         init: function (game) {
             this.game = game;
-            this.host = "http://localhost";
+            this.host = "http://192.168.94.100";
             this.port = 8000;
             this.socket = null;
             this.connected = false;
 
-
-            socket = io.connect("http://localhost:8000");
 
             this.handlers = [];
             this.handlers[Types.Messages.WELCOME] = this.receiveWelcome;
@@ -22,11 +20,11 @@ define([], function () {
             this.socket = io.connect(this.host + ":" + this.port);
 
 
-            socket.on('connect', function () {
+            this.socket.on('connect', function () {
                 msg = [Types.Messages.HELLO];
                 self.sendMessage(msg);
 
-                socket.on('message', function(data) {
+                self.socket.on('message', function(data) {
                     self.receiveMessage(data);
                 });
             });

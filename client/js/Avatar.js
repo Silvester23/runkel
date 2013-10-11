@@ -1,7 +1,7 @@
 define(['Character'], function(Character) {
     var Avatar = Character.extend({
-        init: function(id) {
-            this._super(id, 5, 5);
+        init: function(id,x,y) {
+            this._super(id, x, y);
 
             this.type = Types.Entities.Characters.AVATAR;
             this.movespeed = 200;

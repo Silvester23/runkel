@@ -1,5 +1,5 @@
-define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient','Avatar',
-    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient,Avatar) {
+define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient','Avatar', 'Entity',
+    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient,Avatar, Entity) {
     var Game = Class.extend({
         init: function(app) {
             var self = this;
@@ -30,7 +30,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.initEntityGrid();
 
-            this.initCharacters();
             this.dragElement = null;
 
             this.createTestEntities();
@@ -46,6 +45,8 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             drone.onRequestPathTo(function(src,dest) {
                 return self.pathfinder.findPath(src,dest);
             });
+
+            this.initCharacter(drone);
             this.addEntity(drone);
 
             lilly = new Item("Schwertlilie",12,9);
@@ -78,32 +79,49 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         connect: function() {
+            // Create gameclient and set event callbacks
+
             var self = this;
             this.client = new Gameclient(this);
 
-            this.client.onWelcome(function(id) {
-                self.player = new Player(id);
+            this.client.onWelcome(function(id,x,y) {
+                self.player = new Player(id,x,y);
                 self.initPlayer(id);
                 self.GUI.createInventoryIcons(self.player.inventory);
+
+                self.initCharacter(self.player.avatar);
                 self.addEntity(self.player.avatar);
-                console.log("added player and avatar");
             })
 
-            this.client.onSpawn(function(id) {
-                var a = new Avatar(id);
-                self.addEntity(a);
-                console.log("spawned");
+            this.client.onSpawnCharacter(function(id,x,y) {
+                if(!self.getEntityById(id)) {
+                    var a = new Avatar(id,x,y);
+
+                    self.initCharacter(a);
+                    self.addEntity(a);
+                } else {
+                    console.log("Entity already exists.");
+                }
             })
 
-            this.client.onDespawn(function(data) {
-                var id = data[1];
-                if(self.entities[id]) {
+            this.client.onDespawn(function(id) {
+                var entity = self.getEntityById(id);
+                if(entity) {
                     console.log("Received despawn request on entity ID " + id);
-                    self.removeEntity(self.entities[id]);
+                    self.removeEntity(entity);
                 } else {
                     console.log("Invalid despawn request on entity ID " + id);
                 }
             })
+
+            this.client.onEntityMove(function(id, x, y) {
+                var entity = self.getEntityById(id);
+                if(entity) {
+                    entity.walkTo([x,y]);
+                }
+            });
+
+
             this.client.connect();
 
             this.start();
@@ -114,6 +132,8 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.maxTileY = (this.app.viewport.height / _TILESIZE) - 1;
         },
 
+        /*
+        Static init function, do not use if possible
         initCharacters: function() {
             var self = this;
             this.forEachEntity(function(entity) {
@@ -133,10 +153,28 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 }
             });
         },
+        */
+
+        initCharacter: function(character) {
+            var self = this;
+            if(character instanceof Character) {
+                this.registerEntityPosition(character);
+                character.onStep(function() {
+                    self.registerEntityPosition(character);
+                });
+
+                character.onBeforeStep(function() {
+                    self.unregisterEntityPosition(character);
+                });
+
+                character.onRequestPathTo(function(src,dest) {
+                    return self.pathfinder.findPath(src,dest);
+                });
+            }
+        },
 
         initPlayer: function(id) {
             var self = this;
-            this.player.createAvatar(id);
             this.player.avatar.onStopPathing(function() {
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
@@ -213,7 +251,11 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         removeEntity: function(entity) {
-            delete this.entities[entity.id];
+            if(this.entities[entity.id]) {
+                delete this.entities[entity.id];
+            } else {
+                console.log("Could not remove entity id " + id);
+            }
         },
 
         getEntityAt: function(x,y) {
@@ -224,6 +266,16 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             }
 
             return entity;
+        },
+
+        getEntityById: function(id) {
+            var entity = this.entities[id];
+            if(entity) {
+                return entity;
+            } else {
+                console.log(id, this.entities);
+                return false;
+            }
         },
 
         getEntitiesAt: function(x,y) {
@@ -275,6 +327,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 }
 
                 this.player.avatar.walkTo(tiles);
+                this.client.sendMove(this.player.id,tiles[0],tiles[1]);
             }
         },
 
@@ -300,8 +353,8 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                     console.log("right clicked " + target.id);
                 }
 
-                this.entities["drone"].walkTo(tiles);
-                //console.log(this.entities["drone"].walkTo);
+
+                this.getEntityById("drone").walkTo(tiles);
             }
             return false;
         },

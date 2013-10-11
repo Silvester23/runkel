@@ -14,20 +14,26 @@ var Message = Class.extend({
 Messages.Message = Message;
 
 Messages.Welcome = Message.extend({
-    init: function() {
-        this.data = [Types.Messages.WELCOME];
+    init: function(id, x, y) {
+        this.data = [Types.Messages.WELCOME,id, x, y];
     }
 });
 
 Messages.Spawn = Message.extend({
-    init: function(id) {
-        this.data = [Types.Messages.SPAWN,id];
+    init: function(id,kind,x,y) {
+        this.data = [Types.Messages.SPAWN,id,kind,x,y];
     }
 });
 
 Messages.Despawn = Message.extend({
     init: function(id) {
         this.data = [Types.Messages.DESPAWN,id];
+    }
+});
+
+Messages.Move = Message.extend({
+    init: function(id,x,y) {
+        this.data = [Types.Messages.MOVE,id,x,y];
     }
 });
 

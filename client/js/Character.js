@@ -52,6 +52,7 @@ define(['Entity', 'Transition'], function (Entity, Transition) {
         },
 
         walkTo: function (dest) {
+            console.log(dest);
             var path = this.requestPathTo(this.getGridPosition(), dest);
 
             if (!this.isMoving()) {

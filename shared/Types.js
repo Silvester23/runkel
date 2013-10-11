@@ -11,6 +11,7 @@ Types = {
             AVATAR: 1,
             DRONE: 2
         },
+
         Items: {
             LILLY: 1
         }
@@ -22,7 +23,8 @@ Types = {
         SPAWN: 3,
         MESSAGE: 4,
         DESPAWN: 5,
-        PICKUP: 6
+        PICKUP: 6,
+        MOVE: 7
     },
 
     ButtonStates: {
@@ -46,6 +48,17 @@ Types = {
         HUD: 2
     }
 };
+
+
+Types.isEntity = function(kind) {
+    return _.some(Types.Entities, function(cat) {
+        return _.contains(cat,kind);
+    });
+}
+
+Types.isCharacter = function(kind) {
+    return _.contains(Types.Entities.Characters,kind);
+}
 
 if(!(typeof exports === 'undefined')) {
     module.exports = Types;

@@ -12,6 +12,11 @@ var Player = Class.extend({
         this.world = world;
         this.helloReceived = false;
 
+
+        // Make player spawn at random position
+        this.x = Math.ceil(Math.random()*19);
+        this.y = Math.ceil(Math.random()*12);
+
         this.connection.listen(function(data) {
             var action = data[0];
             if(!this.helloReceived && action !== Types.Messages.HELLO) {
@@ -24,13 +29,20 @@ var Player = Class.extend({
 
             if(action === Types.Messages.HELLO) {
                 this.helloReceived = true;
-                self.connection.send(new Messages.Welcome().data);
+                self.connection.send(new Messages.Welcome(self.id, self.x, self.y).data);
             }
 
             if(action === Types.Messages.PICKUP) {
-                console.log("sending item despawn");
                 var itemId = data[1];
-                self.world.pushBroadcast(new Messages.Despawn(data[1]).data);
+                self.world.pushBroadcast(new Messages.Despawn(itemId).data, this.id);
+            }
+
+            if(action === Types.Messages.MOVE) {
+                var id = data[1],
+                    x = data[2],
+                    y = data[3];
+                console.log("Received move");
+                self.world.pushBroadcast(new Messages.Move(id,x,y).data);
             }
         });
 

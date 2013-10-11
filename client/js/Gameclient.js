@@ -12,6 +12,7 @@ define([], function () {
             this.handlers[Types.Messages.WELCOME] = this.receiveWelcome;
             this.handlers[Types.Messages.SPAWN] = this.receiveSpawn;
             this.handlers[Types.Messages.DESPAWN] = this.receiveDespawn;
+            this.handlers[Types.Messages.MOVE] = this.receiveMove;
 
         },
 
@@ -33,21 +34,41 @@ define([], function () {
 
         receiveWelcome: function(data) {
             this.connected = true;
-            var id = data[1]
+            var id = data[1],
+                x = data[2],
+                y = data[3];
+            console.log(data)
             if(this.welcome_callback) {
-                this.welcome_callback(id);
+                this.welcome_callback(id,x,y);
             }
         },
 
         receiveSpawn: function(data) {
-            if(this.spawn_callback) {
-                this.spawn_callback(data);
+            var id = data[1],
+                kind = data[2],
+                x = data[3],
+                y = data[4];
+            if(Types.isCharacter(kind)) {
+                if(this.spawn_character_callback) {
+                    this.spawn_character_callback(id,x,y);
+                }
+            }
+        },
+
+        receiveMove: function(data) {
+            var id = data[1],
+                x = data[2],
+                y = data[3];
+
+            if(this.entity_move_callback) {
+                this.entity_move_callback(id,x,y);
             }
         },
 
         receiveDespawn: function(data) {
+            var id = data[1];
             if(this.despawn_callback) {
-                this.despawn_callback(data);
+                this.despawn_callback(id);
             }
         },
 
@@ -66,7 +87,6 @@ define([], function () {
         },
 
         receiveMessage: function(data) {
-            console.log(data);
             data = JSON.parse(data);
             console.log("Received message from server:" + data);
             if(data instanceof Array) {
@@ -85,8 +105,11 @@ define([], function () {
         },
 
         sendPickup: function(item) {
-            console.log("sendpickup!");
             this.sendMessage([Types.Messages.PICKUP,item.id]);
+        },
+
+        sendMove: function(id, x, y) {
+            this.sendMessage([Types.Messages.MOVE, id, x, y]);
         },
 
         onWelcome: function(callback) {
@@ -94,11 +117,20 @@ define([], function () {
         },
 
         onSpawn: function(callback) {
+            console.log("--- WARNING: onSpawn is deprecated! ---\n Use specific functions instead.");
             this.spawn_callback = callback;
+        },
+
+        onSpawnCharacter: function(callback) {
+            this.spawn_character_callback = callback;
         },
 
         onDespawn: function(callback) {
             this.despawn_callback = callback;
+        },
+
+        onEntityMove: function(callback) {
+            this.entity_move_callback = callback;
         }
     });
     return Gameclient;

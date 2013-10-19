@@ -7,7 +7,7 @@ define(['Avatar','Item'], function(Avatar,Item) {
 
             var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"]
 
-            this.name = names[_.random(names.length)];
+            this.name = names[_.random(names.length-1)];
             this.level = 1;
         },
 

@@ -13,7 +13,7 @@ Types = {
         },
 
         Items: {
-            LILLY: 1
+            LILLY: 3
         }
     },
 
@@ -54,6 +54,10 @@ Types.isEntity = function(type) {
     return _.some(Types.Entities, function(cat) {
         return _.contains(cat,type);
     });
+}
+
+Types.isItem = function(type) {
+    return _.contains(Types.Entities.Items,type);
 }
 
 Types.isCharacter = function(type) {

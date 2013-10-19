@@ -1,7 +1,8 @@
 var Class = require("./lib/class.js"),
     Messages = require("./Message.js"),
     _ = require("underscore"),
-    Types = require("../../shared/Types.js");
+    Types = require("../../shared/Types.js"),
+    Item = require("./Item.js");
 
 
 var Worldserver = Class.extend({
@@ -11,6 +12,15 @@ var Worldserver = Class.extend({
         this.players = {};
         this.outgoingQueues = {}
         this.ups = 20;
+
+
+        // Tests
+        this.items = {"lilly1": new Item("lilly1",Types.Entities.Items.LILLY, _.random(19), _.random(12)),
+            "lilly2": new Item("lilly2",Types.Entities.Items.LILLY, _.random(19), _.random(12)),
+            "lilly3": new Item("lilly3",Types.Entities.Items.LILLY, _.random(19), _.random(12))};
+
+        //this.items = ["lilly1","lilly2","lilly3"]
+
     },
 
 
@@ -53,7 +63,7 @@ var Worldserver = Class.extend({
 
         player.onExit(function() {
             self.removePlayer(player);
-        })
+        });
         this.players[player.id] = player;
         this.outgoingQueues[player.id] = [];
 
@@ -68,7 +78,13 @@ var Worldserver = Class.extend({
             if(p.id !== player.id) {
                 self.pushToPlayer(player, new Messages.Spawn(p.id, Types.Entities.Characters.AVATAR, p.x, p.y).data);
             }
-        })
+        });
+
+
+        // Test, push items to player
+        _.each(this.items, function(item) {
+            self.pushBroadcast(new Messages.Spawn(item.id, item.type, item.x, item.y).data);
+        });
     },
 
     removePlayer: function(player) {

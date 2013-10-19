@@ -12,7 +12,7 @@ var Player = Avatar.extend({
         var x = Math.ceil(_.random(19)),
             y = Math.ceil(_.random(12));
 
-        this._super(connection.id,Types.Entities.Characters.AVATAR,x,y);
+        this._super(connection.id,x,y);
         var self = this;
 
         this.connection = connection;
@@ -37,6 +37,7 @@ var Player = Avatar.extend({
             if(action === Types.Messages.PICKUP) {
                 var itemId = data[1];
                 self.world.pushBroadcast(new Messages.Despawn(itemId).data, this.id);
+                delete self.world.items[itemId];
             }
 
             if(action === Types.Messages.MOVE) {

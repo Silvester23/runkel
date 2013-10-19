@@ -115,7 +115,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
 
             _.each(inv, function(item) {
                 try {
-                    var icon = this.game.GUI.icons["icon_" + item.id];
+                    var icon = self.game.GUI.icons["icon_" + item.id];
                     if(icon) {
                         self.drawInventoryIcon(icon);
                     }

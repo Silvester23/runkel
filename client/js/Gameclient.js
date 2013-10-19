@@ -40,6 +40,8 @@ define([], function () {
             console.log(data)
             if(this.welcome_callback) {
                 this.welcome_callback(id,x,y);
+            } else {
+                console.error("ERROR: No welcome callback!");
             }
         },
 
@@ -51,6 +53,10 @@ define([], function () {
             if(Types.isCharacter(type)) {
                 if(this.spawn_character_callback) {
                     this.spawn_character_callback(id,x,y);
+                }
+            } else if(Types.isItem(type)) {
+                if(this.spawn_item_callback) {
+                    this.spawn_item_callback(id,x,y);
                 }
             }
         },
@@ -123,6 +129,10 @@ define([], function () {
 
         onSpawnCharacter: function(callback) {
             this.spawn_character_callback = callback;
+        },
+
+        onSpawnItem: function(callback) {
+            this.spawn_item_callback = callback;
         },
 
         onDespawn: function(callback) {

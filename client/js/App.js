@@ -4,56 +4,30 @@ define([], function () {
             var self = this;
             this.width = 640;
             this.height = 480;
-            this.viewport = {};
-            this.viewport.width = 640;
-            this.viewport.height = 416;
+            this.viewport = { width: 640, height: 416 };
+            this.offset = {x: 0, y: 0};
+        },
 
-            // Handle User Input
-
-            /* canvas.onclick = function(evt){
-             //self.click(evt);
-             console.log("mouse click");
-             };
-             */
-            canvas.onmousedown = function (evt) {
-                if (self.game.mousedown(evt)) {
-                }
-            };
-
-            canvas.onmouseup = function (evt) {
-                /*if(self.game.dragging()) {
-                 console.log("stop dragging");
-                 self.game.dragElement = null;
-                 } */
-            };
-
-            canvas.onclick = function (evt) {
-                if (self.game.dragging()) {
-                    if (self.game.dragElement.release) {
-                        self.game.dragElement.release();
-                    }
-                    self.game.dragElement = null;
-                }
-                else {
-                    self.game.click(evt);
-                }
-            };
-
-            canvas.onmousemove = function (evt) {
-                self.game.hover(evt);
-            };
-
-            canvas.oncontextmenu = function (evt) {
-                self.game.rightclick(evt);
-                return false;
-            };
-
+        setMouseCoordinates: function(evt) {
+            if(this.game) {
+                var mouse = this.game.mouse,
+                    x = evt.pageX - this.offset.x,
+                    y = evt.pageY - this.offset.y;
+                mouse.x = x;
+                mouse.y = y;
+            }
         },
 
         setGame: function (game) {
             this.game = game;
             console.info("Game set");
         },
+
+        setOffset: function(x,y) {
+            this.offset.x = x;
+            this.offset.y = y;
+        },
+
 
         isInBounds: function (x, y) {
             return (x <= this.viewport.width && y <= this.viewport.height);

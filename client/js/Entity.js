@@ -27,7 +27,7 @@ define(['Sprite'], function(Sprite) {
         },
 
         getGridPosition: function () {
-            return [this.tileX, this.tileY];
+            return {x: this.tileX, y: this.tileY};
         },
 
         setSprite: function (name) {

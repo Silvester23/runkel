@@ -31,51 +31,11 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.initEntityGrid();
 
             this.dragElement = null;
+            this.mouse = {x: 0, y: 0};
 
-            this.createTestEntities();
+
 
             this.connect();
-        },
-
-        // Test and Debug function!
-        createTestEntities: function() {
-            var self = this;
-            // TESTS
-            drone = new Drone("drone");
-            drone.onRequestPathTo(function(src,dest) {
-                return self.pathfinder.findPath(src,dest);
-            });
-
-            this.initCharacter(drone);
-            this.addEntity(drone);
-
-            lilly = new Item("Schwertlilie",12,9);
-            lilly.setSprite("lilly");
-            lilly.setAnimation("idle",50);
-            this.addEntity(lilly);
-            this.registerEntityPosition(lilly);
-
-
-            lilly2 = new Item("Schwertlilie2",3,3);
-            lilly2.setSprite("lilly");
-            lilly2.setAnimation("idle",50);
-            lilly2.sprite.image.src = "img/lilly_red.png";
-            this.addEntity(lilly2);
-            this.registerEntityPosition(lilly2);
-
-            lilly4 = new Item("Schwertlilie3",5,3);
-            lilly4.setSprite("lilly");
-            lilly4.setAnimation("idle",50);
-            lilly4.sprite.image.src = "img/lilly_yellow.png";
-            this.addEntity(lilly4);
-            this.registerEntityPosition(lilly4);
-
-            lilly3 = new Item("Schwertlilie4",4,3);
-            lilly3.setSprite("lilly");
-            lilly3.setAnimation("idle",50);
-            lilly3.sprite.image.src = "img/lilly_blue.png";
-            this.addEntity(lilly3);
-            this.registerEntityPosition(lilly3);
         },
 
         connect: function() {
@@ -87,9 +47,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.client.onWelcome(function(id,x,y) {
                 self.player = new Player(id,x,y);
                 self.initPlayer(id);
-                self.GUI.createInventoryIcons(self.player.inventory);
-
-                self.initCharacter(self.player);
                 self.addEntity(self.player);
             })
 
@@ -100,7 +57,20 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                     self.initCharacter(a);
                     self.addEntity(a);
                 } else {
-                    console.log("Entity already exists.");
+                    console.log("Character already exists.");
+                }
+            })
+
+            this.client.onSpawnItem(function(id,x,y) {
+                if(!self.getEntityById(id)) {
+                    var i = new Item(id,x,y);
+
+                    i.setSprite("lilly");
+                    i.setAnimation("idle",50);
+                    self.addEntity(i);
+                    self.registerEntityPosition(i);
+                } else {
+                    console.log("Item already exists.");
                 }
             })
 
@@ -117,10 +87,9 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.client.onEntityMove(function(id, x, y) {
                 var entity = self.getEntityById(id);
                 if(entity) {
-                    entity.walkTo([x,y]);
+                    entity.walkTo(x,y);
                 }
             });
-
 
             this.client.connect();
 
@@ -132,33 +101,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.maxTileY = (this.app.viewport.height / _TILESIZE) - 1;
         },
 
-        /*
-        Static init function, do not use if possible
-        initCharacters: function() {
-            var self = this;
-            this.forEachEntity(function(entity) {
-                if(entity instanceof Character) {
-                    self.registerEntityPosition(entity);
-                    entity.onStep(function() {
-                        self.registerEntityPosition(entity);
-                    });
-
-                    entity.onBeforeStep(function() {
-                        self.unregisterEntityPosition(entity);
-                    });
-
-                    entity.onRequestPathTo(function(src,dest) {
-                        return self.pathfinder.findPath(src,dest);
-                    });
-                }
-            });
-        },
-        */
 
         initCharacter: function(character) {
             var self = this;
             if(character instanceof Character) {
                 this.registerEntityPosition(character);
+
                 character.onStep(function() {
                     self.registerEntityPosition(character);
                 });
@@ -168,13 +116,17 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 });
 
                 character.onRequestPathTo(function(src,dest) {
-                    return self.pathfinder.findPath(src,dest);
+                    return self.pathfinder.findPath(src, dest);
                 });
             }
         },
 
-        initPlayer: function(id) {
+        initPlayer: function() {
             var self = this;
+
+            this.GUI.createInventoryIcons(self.player.inventory);
+            this.initCharacter(this.player);
+
             this.player.onStopPathing(function() {
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
@@ -191,7 +143,10 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 });
             });
 
+
             this.registerEntityPosition(this.player);
+            /*
+            Already covered by entity-initialization
             this.player.onStep(function() {
                 self.registerEntityPosition(self.player);
             });
@@ -200,9 +155,14 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 self.unregisterEntityPosition(self.player);
             });
 
-            this.player.onRequestPathTo(function(src,dest) {
+
+            this.player.onRequestPathTo(function(x,y) {
+                console.log(x,y);
+                var dest = {x: x, y: y};
+                var src = {x: this.player.tileX, y: this.player.tileY};
                 return self.pathfinder.findPath(src,dest);
             });
+            */
         },
 
         initEntityGrid: function() {
@@ -229,7 +189,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         addToEntityGrid: function(entity, x, y) {
-            this.entityGrid[y][x][entity.id] = entity;
+            try {
+                this.entityGrid[y][x][entity.id] = entity;
+            } catch(e) {
+                console.log(x,y,entity);
+                throw(e)
+            }
         },
 
         removeFromEntityGrid: function(entity, x, y) {
@@ -252,6 +217,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
         removeEntity: function(entity) {
             if(this.entities[entity.id]) {
+                this.unregisterEntityPosition(entity);
                 delete this.entities[entity.id];
             } else {
                 console.log("Could not remove entity id " + id);
@@ -272,9 +238,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             var entity = this.entities[id];
             if(entity) {
                 return entity;
-            } else {
-                console.log(id, this.entities);
-                return false;
             }
         },
 
@@ -282,13 +245,10 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             return this.entityGrid[y][x];
         },
 
-        mousedown: function(evt) {
-            var self = this,
-                offset = getOffset(canvas),
-                x, y, guiElem;
-
-            x = evt.clientX - offset[0];
-            y = evt.clientY -  offset[1];
+        mousedown: function() {
+            var self = this, guiElem,
+                x = this.mouse.x,
+                y = this.mouse.y;
 
             guiElem = this.GUI.findElement(x, y);
             if(guiElem && guiElem.allowDrag) {
@@ -304,77 +264,72 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             }
         },
 
-        click: function(evt) {
-            // Rework getOffset(canvas) part!
-            var self = this,
-                offset = getOffset(canvas),
-                x, y, tiles, target, type, elem;
-
-            x = evt.clientX - offset[0];
-            y = evt.clientY -  offset[1];
+        click: function() {
+            if(this.dragging()) {
+                if(this.dragElement.release) {
+                    this.dragElement.release();
+                }
+                this.dragElement = null;
+                return;
+            }
+            var x = this.mouse.x,
+                y = this.mouse.y;
 
             var guiElem = this.GUI.findElement(x,y);
             if(guiElem) {
                 this.GUI.click(guiElem.id, x, y);
             } else if(this.app.isInBounds(x,y)) {
-                tiles = getTiles([x,y]);
+                var pos = this.getMouseGridPosition();
+                if(!_.isEqual(pos,this.player.getGridPosition())) {
+                    console.log(pos.x, pos.y);
+                    var entity = this.getEntityAt(pos.x, pos.y);
 
-                console.log(tiles[0],tiles[1]);
-                target = this.getEntityAt(tiles[0],tiles[1]);
-
-                if(target) {
-                    console.log("clicked " + target.id);
+                    if(entity) {
+                        console.log("clicked " + entity.id);
+                        if(entity instanceof Character) {
+                            console.log("Don't walk onto other characters! That's just rude.");
+                        } else if(entity instanceof Item) {
+                            this.player.walkTo(pos.x, pos.y);
+                            this.client.sendMove(this.player.id,pos.x,pos.y);
+                        }
+                    } else {
+                        this.player.walkTo(pos.x, pos.y);
+                        this.client.sendMove(this.player.id,pos.x,pos.y);
+                    }
+                } else {
+                    console.info("Clicked self.");
                 }
-
-                this.player.walkTo(tiles);
-                this.client.sendMove(this.player.id,tiles[0],tiles[1]);
             }
         },
 
-        rightclick: function(evt) {
+        getMouseGridPosition: function() {
+            var tileX = Math.floor(this.mouse.x / _TILESIZE),
+                tileY = Math.floor(this.mouse.y / _TILESIZE);
+            return {x: tileX, y: tileY};
+        },
+
+        rightclick: function() {
             // Temporary test function
-            var self = this,
-                offset = getOffset(canvas),
-                x, y, tiles, target, type, elem;
-
-            x = evt.clientX - offset[0];
-            y = evt.clientY -  offset[1];
-
             var guiElem = this.GUI.findElement(x,y);
             if(guiElem) {
                 // Do nothing
-            } else if(this.app.isInBounds(x,y)) {
-                tiles = getTiles([x,y]);
-
-                console.log(tiles[0],tiles[1]);
-                target = this.getEntityAt(tiles[0],tiles[1]);
-
-                if(target) {
-                    console.log("right clicked " + target.id);
-                }
-
-
-                this.getEntityById("drone").walkTo(tiles);
             }
             return false;
         },
 
-        hover: function(evt) {
-            var self = this,
-                offset = getOffset(canvas),
-                evtX, evtY, tiles;
-
-            evtX = evt.clientX - offset[0];
-            evtY = evt.clientY -  offset[1];
+        hover: function() {
+            var x = this.mouse.x,
+                y = this.mouse.y;
 
             if(!this.dragging()) {
-                if(!this.GUI.findElement(evtX,evtY) && this.app.isInBounds(evtX,evtY)) {
-                    tiles = getTiles([evtX,evtY]);
-                    this.curTileX = tiles[0];
-                    this.curTileY = tiles[1];
+
+                if(!this.GUI.findElement(x,y) && this.app.isInBounds(x,y)) {
+                    var pos = this.getMouseGridPosition();
+                    this.curTileX = pos.x;
+                    this.curTileY = pos.y;
                 }
             } else {
-                this.dragElement.drag(evtX,evtY);
+                this.dragElement.drag(x,y);
             }
 
         },
@@ -388,7 +343,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.tick();
 
-            console.log("Game started");
+            console.info("Game started");
         },
 
         stop: function() {

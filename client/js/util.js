@@ -34,6 +34,9 @@ if (!Array.prototype.indexOf)
   };
 }
 
+
+
+/*
 var deleteIndex = function (arr, index) {
     for (var i = index, len = arr.length - 1; i < len; i++)
         arr[i] = arr[i + 1];
@@ -43,20 +46,12 @@ var deleteIndex = function (arr, index) {
 };
 
 
-var getOffset = function (elem) {
-    // From http://www.quirksmode.org/js/findpos.html
-    var curleft = curtop = 0;
-    if (elem.offsetParent) {
-        do {
-            curleft += elem.offsetLeft;
-            curtop += elem.offsetTop;
-        } while (elem = elem.offsetParent);
-    }
-    return [curleft, curtop];
-};
+
+
 
 var getTiles = function (coords) {
     tileX = Math.floor(coords[0] / _TILESIZE);
     tileY = Math.floor(coords[1] / _TILESIZE);
     return [tileX, tileY];
 };
+ */

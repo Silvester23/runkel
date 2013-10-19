@@ -17,7 +17,7 @@ define(['Entity', 'Transition'], function (Entity, Transition) {
 
         requestPathTo: function (src, dest) {
             if (this.requestpath_callback) {
-                return this.requestpath_callback(src, dest);
+                return this.requestpath_callback(src,dest);
             }
             else
                 return false;
@@ -45,15 +45,17 @@ define(['Entity', 'Transition'], function (Entity, Transition) {
             this.nextStep();
         },
 
-        continueTo: function (dest) {
-            src = [this.path[this.step][0], this.path[this.step][1]];
+        continueTo: function (x,y) {
+            var src = {x: this.path[this.step][0], y: this.path[this.step][1]};
+            var dest = {x: x, y: y};
             this.path = this.requestPathTo(src, dest);
             this.step = 0;
         },
 
-        walkTo: function (dest) {
-            console.log(dest);
-            var path = this.requestPathTo(this.getGridPosition(), dest);
+        walkTo: function (x,y) {
+            var src = {x: this.tileX, y: this.tileY};
+            var dest = {x: x, y: y};
+            var path = this.requestPathTo(src,dest);
 
             if (!this.isMoving()) {
                 if (path.length > 1) {
@@ -64,7 +66,7 @@ define(['Entity', 'Transition'], function (Entity, Transition) {
                 //if(path.length > 1) {
                 // Adjust current path
                 if (!_.isEqual(path[path.length - 1], this.path[this.path.length - 1])) {
-                    this.continueTo(dest);
+                    this.continueTo(x,y);
                 }
                 //}
             }

@@ -4,7 +4,6 @@ define(['GUIElement'], function (GUIElement) {
             this._super(data);
             var self = this;
             this.visible = false;
-            console.log(this.id);
             this.image = new Image();
             this.updateImageSrc();
         },

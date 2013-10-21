@@ -1,4 +1,4 @@
-define(['ImgButton','Screen'], function(ImgButton,Screen) {
+define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
     var Renderer = Class.extend({
         init: function(game) {
             
@@ -19,6 +19,8 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             this.frameCount = 0;
             this.realFPS = 0;
 
+            this.center = {x: 0, y: 0};
+            this.centerTiles = this.game.app.centerTiles;
         },
 
         getContext: function() {
@@ -31,6 +33,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
 
             ctx.save();
             ctx.globalAlpha = 0.3;
+
             for(i = 0; i < 640/_TILESIZE; i++) {
                 ctx.fillRect(i*_TILESIZE, 0, 1, 480);
             }
@@ -39,8 +42,13 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.fillRect(0, i*_TILESIZE, 640, 1);
             }
 
+
+
+            ctx.fillRect(319,-200,2,800);
+            ctx.fillRect(-300,207,1000,2);
+
+
             ctx.restore();
-            this.drawTileHover();
         },
 
 
@@ -56,6 +64,12 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
                 ctx.restore();
 
+            }
+        },
+
+        drawTargetIndicator: function() {
+            var ctx = this.getContext();
+            if(this.game.player) {
                 p = this.game.player.path;
                 if(p !== null) {
                     x = p[p.length-1][0];
@@ -65,7 +79,6 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                     ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
                     ctx.restore();
                 }
-
             }
         },
 
@@ -172,7 +185,6 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.fillRect(screen.x,screen.y,screen.width,screen.height);
             }
 
-            //this.drawText(screen.id, screen.x+10,screen.y+10);
             ctx.restore();
         },
 
@@ -192,28 +204,28 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             }
             ctx.restore();
         },
-        
+
         drawEntities: function() {
             var self = this;
-            
+
             // calculate the time since the last frame
             var thisFrame = new Date().getTime();
             var dt = (thisFrame - this.lastFrame)/1000;
-            this.lastFrame = thisFrame;            
-            
+            this.lastFrame = thisFrame;
+
             // Draw all game objects
             this.game.forEachEntity(function(entity) {
                 self.drawEntity(entity,self.backBuffercontext);
             });
-            
-        
+
+
         },
-        
+
         drawEntity: function(entity,context) {
             var sprite = entity.sprite;
             var anim = entity.currentAnimation;
 
-            
+
             if(anim && sprite) {
                 var frame = anim.currentFrame,
                 x = frame.x,
@@ -222,11 +234,17 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 h = sprite.height,
                 dx = entity.x,
                 dy = entity.y;
-                
+
             }
-            
+
             context.save();
-            context.translate(dx,dy);
+            if(entity instanceof Player) {
+                context.translate(-(this.centerTiles.x * _TILESIZE - this.center.x ), -(this.centerTiles.y * _TILESIZE - this.center.y));
+                context.translate(this.centerTiles.x * _TILESIZE, this.centerTiles.y * _TILESIZE);
+            } else {
+                context.translate(dx, dy);
+            }
+
             try {
                 context.drawImage(sprite.image, x, y, w, h, 0, 0, w, h);
             } catch(e) {
@@ -234,9 +252,9 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 throw(e);
             }
             context.restore();
-            
+
         },
-        
+
         drawText: function(text, x, y, font, align, ctx) {
             var font = typeof font !== 'undefined' ? font : '15px Courier',
                 ctx = typeof ctx !== 'undefined' ? ctx : this.getContext();
@@ -250,7 +268,7 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             ctx.restore();
 
         },
-        
+
         renderFrame: function() {
 
             var grid = true;
@@ -259,25 +277,44 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
             this.backBuffercontext.clearRect(0,0,this.backBuffer.width,this.backBuffer.height);
             this.context.clearRect(0,0,this.backBuffer.width,this.backBuffer.height);
 
-            
+            var ctx = this.getContext();
+
+            ctx.save();
+            if(this.game.player) {
+                this.center = {x: this.game.player.x, y: this.game.player.y};
+            }
+
+            // Draw dynamic objects first
+            ctx.translate(this.centerTiles.x * _TILESIZE - this.center.x , this.centerTiles.y * _TILESIZE - this.center.y);
+
             // Draw visible entities
             this.drawEntities();
-
 
             if(grid) {
                 this.drawGrid();
             }
 
-            // Draw GUI
-            this.drawGUI();
+            this.drawTargetIndicator();
+
+            ctx.restore();
+
+            // Now draw static objects
+
+            this.drawTileHover();
+
+
 
             
             // Debug FPS
             this.drawFPS();
 
+            // Draw GUI
+            this.drawGUI();
+
 
             // Copy buffer to canvas
             this.context.drawImage(this.backBuffer,0,0);
+
         },
         
         

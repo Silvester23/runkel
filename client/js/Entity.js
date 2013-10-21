@@ -20,10 +20,13 @@ define(['Sprite'], function(Sprite) {
             this.y = y;
         },
 
-        setGridPosition: function (tileX, tileY) {
-            this.setPosition(tileX * _TILESIZE, tileY * _TILESIZE);
+        setGridPosition: function (tileX, tileY, dontmove) {
             this.tileX = tileX;
             this.tileY = tileY;
+
+            if(!dontmove) {
+                this.setPosition(tileX * _TILESIZE, tileY * _TILESIZE);
+            }
         },
 
         getGridPosition: function () {

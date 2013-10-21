@@ -1,6 +1,9 @@
 requirejs(['App', 'Game'],
     function (App, Game) {
+        // Global variables
         _TILESIZE = 32;
+
+
         var canvas = document.getElementById('canvas');
         var app = new App();
         var game = new Game(app);

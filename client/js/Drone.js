@@ -13,18 +13,7 @@ define(['Character'], function (Character) {
 
 
         update: function () {
-            /*
-            now = new Date().getTime();
-            if (now - this.lastTime > 2000) {
-                this.lastTime = now;
-                rnd = Math.random();
-                if (rnd <= 0.7) {
-                    var x = Math.floor(Math.random() * 640 / _TILESIZE);
-                    var y = Math.floor(Math.random() * 480 / _TILESIZE);
-                    this.walkTo([x, y]);
-                }
-            }
-            */
+
         }
     });
     return Drone;

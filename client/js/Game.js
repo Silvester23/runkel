@@ -145,24 +145,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
 
             this.registerEntityPosition(this.player);
-            /*
-            Already covered by entity-initialization
-            this.player.onStep(function() {
-                self.registerEntityPosition(self.player);
-            });
 
-            this.player.onBeforeStep(function() {
-                self.unregisterEntityPosition(self.player);
-            });
-
-
-            this.player.onRequestPathTo(function(x,y) {
-                console.log(x,y);
-                var dest = {x: x, y: y};
-                var src = {x: this.player.tileX, y: this.player.tileY};
-                return self.pathfinder.findPath(src,dest);
-            });
-            */
         },
 
         initEntityGrid: function() {
@@ -177,12 +160,14 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         registerEntityPosition: function(entity) {
+            console.log("registering " + entity.tileX,entity.tileY);
             if(entity) {
                 this.addToEntityGrid(entity,entity.tileX,entity.tileY);
             }
         },
 
         unregisterEntityPosition: function(entity) {
+            console.log("unregistering " + entity.tileX,entity.tileY);
             if(entity) {
                 this.removeFromEntityGrid(entity,entity.tileX,entity.tileY);
             }
@@ -279,30 +264,45 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             if(guiElem) {
                 this.GUI.click(guiElem.id, x, y);
             } else if(this.app.isInBounds(x,y)) {
-                var pos = this.getMouseGridPosition();
+
+                var pos = this.getAbsoluteMouseGridPosition();
                 if(!_.isEqual(pos,this.player.getGridPosition())) {
                     console.log(pos.x, pos.y);
                     var entity = this.getEntityAt(pos.x, pos.y);
+
 
                     if(entity) {
                         console.log("clicked " + entity.id);
                         if(entity instanceof Character) {
                             console.log("Don't walk onto other characters! That's just rude.");
                         } else if(entity instanceof Item) {
-                            this.player.walkTo(pos.x, pos.y);
-                            this.client.sendMove(this.player.id,pos.x,pos.y);
+
+                            //this.player.walkTo(pos.x, pos.y);
+                            //this.player.setGridPosition(pos.x,pos.y);
+                            //this.client.sendMove(this.player.id,pos.x - this.player.tileX, pos.y - this.player.tileY);
                         }
                     } else {
-                        this.player.walkTo(pos.x, pos.y);
+
                         this.client.sendMove(this.player.id,pos.x,pos.y);
+                        this.player.walkTo(pos.x,pos.y);
+                        //this.player.setGridPosition(pos.x,pos.y,true);
                     }
                 } else {
                     console.info("Clicked self.");
                 }
+
             }
         },
 
-        getMouseGridPosition: function() {
+        getAbsoluteMouseGridPosition: function() {
+            var relPos = this.getRelativeMouseGridPosition();
+            //console.log(relPos.x-10, relPos.y-6);
+
+            //console.log({x: this.player.tileX + (relPos.x-10), y: this.player.tileY + (relPos.y-6)});
+            return {x: this.player.tileX + (relPos.x-10), y: this.player.tileY + (relPos.y-6)};
+        },
+
+        getRelativeMouseGridPosition: function() {
             var tileX = Math.floor(this.mouse.x / _TILESIZE),
                 tileY = Math.floor(this.mouse.y / _TILESIZE);
             return {x: tileX, y: tileY};
@@ -324,7 +324,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             if(!this.dragging()) {
 
                 if(!this.GUI.findElement(x,y) && this.app.isInBounds(x,y)) {
-                    var pos = this.getMouseGridPosition();
+                    var pos = this.getRelativeMouseGridPosition();
                     this.curTileX = pos.x;
                     this.curTileY = pos.y;
                 }

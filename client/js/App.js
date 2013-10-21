@@ -6,6 +6,8 @@ define([], function () {
             this.height = 480;
             this.viewport = { width: 640, height: 416 };
             this.offset = {x: 0, y: 0};
+
+            this.centerTiles = {x: 10, y: 6};
         },
 
         setMouseCoordinates: function(evt) {

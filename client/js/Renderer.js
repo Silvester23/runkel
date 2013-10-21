@@ -56,16 +56,17 @@ define(['ImgButton','Screen'], function(ImgButton,Screen) {
                 ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
                 ctx.restore();
 
-                p = this.game.player.path;
-                if(p !== null) {
-                    x = p[p.length-1][0];
-                    y = p[p.length-1][1];
-                    ctx.save();
-                    ctx.strokeStyle = "red";
-                    ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
-                    ctx.restore();
+                if(this.game.player) {
+                    p = this.game.player.path;
+                    if(p !== null) {
+                        x = p[p.length-1][0];
+                        y = p[p.length-1][1];
+                        ctx.save();
+                        ctx.strokeStyle = "red";
+                        ctx.strokeRect(x * _TILESIZE, y * _TILESIZE, _TILESIZE, _TILESIZE);
+                        ctx.restore();
+                    }
                 }
-
             }
         },
 

@@ -75,6 +75,7 @@ define(['Entity', 'Transition'], function (Entity, Transition) {
         nextStep: function () {
             var stop = false;
             if (this.before_step_callback) {
+
                 this.before_step_callback();
             }
 

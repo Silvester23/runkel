@@ -33,25 +33,3 @@ if (!Array.prototype.indexOf)
     return -1;
   };
 }
-
-
-
-/*
-var deleteIndex = function (arr, index) {
-    for (var i = index, len = arr.length - 1; i < len; i++)
-        arr[i] = arr[i + 1];
-
-    arr.length = len;
-    return arr;
-};
-
-
-
-
-
-var getTiles = function (coords) {
-    tileX = Math.floor(coords[0] / _TILESIZE);
-    tileY = Math.floor(coords[1] / _TILESIZE);
-    return [tileX, tileY];
-};
- */

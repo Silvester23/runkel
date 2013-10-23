@@ -118,17 +118,6 @@ define(['Character'], function (Character) {
             });
         }
 
-        /*
-         updateMovement: function() {
-         game.forEachEntity(function(entity) {
-         if(entity instanceof Character) {
-         c = entity;
-         if(c.isMoving()) {
-
-         }
-         }
-         });
-         } */
 
 
     });

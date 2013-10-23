@@ -18,7 +18,8 @@ Types = {
     },
 
     Tiles: {
-        GRASS: 1
+        GRASS: 1,
+        SNOW: 2
     },
 
     Messages: {

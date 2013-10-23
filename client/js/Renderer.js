@@ -298,38 +298,27 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
 
             var ctx = this.getContext();
+            /*
                 tileSheet = new Image();
                 /*w = this.game.map.width,
                 * h = this.game.map.height;
-                */
+
             tileSheet.src = "/img/grass.png";
+            */
 
             if(this.game.player) {
-                /*
-                var startX = this.game.player.tileX - this.centerTiles.x - 1,
-                    startY = this.game.player.tileY - this.centerTiles.y - 1,
-                    w = this.game.player.tileX + ((this.game.app.viewport.width / _TILESIZE) / 2) + 1,
-                    h = this.game.player.tileY + ((this.game.app.viewport.height / _TILESIZE) / 2) + 1;
-
-                startX = startX < 0 ? 0 : startX;
-                startY = startY < 0 ? 0 : startY;
-                w = w < this.game.map.width ? w : this.game.map.width;
-                h = h < this.game.map.height? h: this.game.map.height;
-                */
 
                 var bounds = this.game.app.getVisibleTileBounds();
 
 
                 for(var row = bounds.minY; row < bounds.maxY; row++) {
                     for(var col = bounds.minX; col < bounds.maxX; col++) {
-                        var tile = this.game.map.tileset[row][col];
+                        var tile = this.game.map.tiles[row][col];
 
                         var x = tile.offset.x,
-                            bx = tile.baseOffset.x,
-                            y = tile.offset.y,
-                            by = tile.baseOffset.y;
+                            y = tile.offset.y;
 
-                        ctx.drawImage(tileSheet, (bx + x) * _TILESIZE, (by + y) * _TILESIZE, _TILESIZE, _TILESIZE, col * _TILESIZE, row * _TILESIZE, _TILESIZE, _TILESIZE);
+                        ctx.drawImage(this.game.map.tileset, (x) * _TILESIZE, (y) * _TILESIZE, _TILESIZE, _TILESIZE, col * _TILESIZE, row * _TILESIZE, _TILESIZE, _TILESIZE);
 
                     }
                 }

@@ -27,15 +27,10 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.currentTime = new Date().getTime();
 
-
-            this.initEntityGrid();
-
             this.dragElement = null;
             this.mouse = {x: 0, y: 0};
 
 
-
-            this.connect();
         },
 
         connect: function() {
@@ -48,6 +43,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 self.player = new Player(id,x,y);
                 self.initPlayer(id);
                 self.addEntity(self.player);
+
             })
 
             this.client.onSpawnCharacter(function(id,x,y) {
@@ -96,7 +92,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
             this.client.connect();
 
-            this.start();
         },
 
         updateMaxTiles: function() {
@@ -376,11 +371,19 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         start: function() {
-            this.started = true;
-
-            this.tick();
-
-            console.info("Game started");
+            var self = this;
+            if(!this.started) {
+                var wait = setInterval(function() {
+                    if(self.map.isLoaded) {
+                        self.initEntityGrid();
+                        self.connect();
+                        self.started = true;
+                        self.tick();
+                        console.info("Game started");
+                        clearInterval(wait);
+                    }
+                }, 100)
+            }
         },
 
         stop: function() {

@@ -4,10 +4,21 @@ define(['Button'], function (Button) {
             this._super(data);
             this.state = Types.ButtonStates.BASE;
             this.nextState = Types.ButtonStates.ACTIVE;
-            this.image = new Image();
-            this.updateImageSrc();
 
-            // ImgButtons should always deactivate all other buttons of the same section on click
+            this.images = {};
+            this.initImages();
+            this.image = this.images[this.state];
+        },
+
+        initImages: function() {
+            var states = [Types.ButtonStates.BASE, Types.ButtonStates.ACTIVE, Types.ButtonStates.DOWN];
+
+            for(var i = 0; i < states.length; i++) {
+                var state = states[i];
+                this.images[state] = new Image();
+                this.images[state].src = "img/buttons/" + this.id + "_" + state + ".png";
+            }
+
         },
 
         activate: function () {
@@ -28,11 +39,11 @@ define(['Button'], function (Button) {
 
         setState: function (state) {
             this.state = state;
-            this.updateImageSrc();
+            this.updateImage();
         },
 
-        updateImageSrc: function () {
-            this.image.src = "img/buttons/" + this.id + "_" + this.state + ".png";
+        updateImage: function() {
+            this.image = this.images[this.state];
         },
 
         update: function (time) {

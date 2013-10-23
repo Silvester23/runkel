@@ -8,6 +8,7 @@ requirejs(['App', 'Game'],
         var app = new App();
         var game = new Game(app);
         app.setGame(game);
+        game.start();
 
         // Get canvas offset
         // From http://www.quirksmode.org/js/findpos.html
@@ -36,10 +37,12 @@ requirejs(['App', 'Game'],
             game.hover();
         };
 
-        canvas.oncontextmenu = function (evt) {
+
+        /*canvas.oncontextmenu = function (evt) {
             app.setMouseCoordinates(evt);
             game.rightclick();
             return false;
         };
+        */
     }
 );

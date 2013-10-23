@@ -21,6 +21,11 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
             this.center = {x: 0, y: 0};
             this.centerTiles = this.game.app.centerTiles;
+
+
+            // Debug enable
+            this.grid = false;
+            this.debug = false;
         },
 
         getContext: function() {
@@ -29,23 +34,42 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
 
         drawGrid: function() {
-            var ctx = this.getContext();
+                var ctx = this.getContext(),
+                w = this.game.map.width,
+                h = this.game.map.height;
+
 
             ctx.save();
             ctx.globalAlpha = 0.3;
 
-            for(i = 0; i < 640/_TILESIZE; i++) {
-                ctx.fillRect(i*_TILESIZE, 0, 1, 480);
+            for(var i = 0; i <= w; i++) {
+                ctx.fillRect(i*_TILESIZE, 0, 1, h * _TILESIZE);
             }
 
-            for(i = 0; i < 480/_TILESIZE; i++) {
-                ctx.fillRect(0, i*_TILESIZE, 640, 1);
+            for(i = 0; i <= h; i++) {
+                ctx.fillRect(0, i*_TILESIZE, w * _TILESIZE, 1);
             }
 
 
+            // Debug vis
+            if(this.debug) {
+                ctx.save();
+                ctx.fillStyle = "red";
+                for(i = 0; i < h; i++) {
+                    for(var j = 0; j < w; j++) {
+                        if(_.size(this.game.getEntitiesAt(j,i)) > 0) {
+                            ctx.fillRect(j* _TILESIZE, i * _TILESIZE, _TILESIZE, _TILESIZE);
+                        }
+                    }
+                }
+                ctx.restore();
+            }
 
-            ctx.fillRect(319,-200,2,800);
-            ctx.fillRect(-300,207,1000,2);
+
+            // Some random stuff for orientation
+            ctx.fillRect(9 * _TILESIZE, 4 * _TILESIZE, 3 * _TILESIZE, 2 * _TILESIZE);
+            ctx.fillRect(17 * _TILESIZE, 9 * _TILESIZE, 2 * _TILESIZE, 5 * _TILESIZE);
+
 
 
             ctx.restore();
@@ -214,7 +238,7 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             this.lastFrame = thisFrame;
 
             // Draw all game objects
-            this.game.forEachEntity(function(entity) {
+            this.game.forEachVisibleEntity(function(entity) {
                 self.drawEntity(entity,self.backBuffercontext);
             });
 
@@ -269,9 +293,52 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
         },
 
-        renderFrame: function() {
+        drawBackground: function() {
+            // Eventually this needs to depend on dynamic map data, for now it's pretty static
 
-            var grid = true;
+
+            var ctx = this.getContext();
+                tileSheet = new Image();
+                /*w = this.game.map.width,
+                * h = this.game.map.height;
+                */
+            tileSheet.src = "/img/grass.png";
+
+            if(this.game.player) {
+                /*
+                var startX = this.game.player.tileX - this.centerTiles.x - 1,
+                    startY = this.game.player.tileY - this.centerTiles.y - 1,
+                    w = this.game.player.tileX + ((this.game.app.viewport.width / _TILESIZE) / 2) + 1,
+                    h = this.game.player.tileY + ((this.game.app.viewport.height / _TILESIZE) / 2) + 1;
+
+                startX = startX < 0 ? 0 : startX;
+                startY = startY < 0 ? 0 : startY;
+                w = w < this.game.map.width ? w : this.game.map.width;
+                h = h < this.game.map.height? h: this.game.map.height;
+                */
+
+                var bounds = this.game.app.getVisibleTileBounds();
+
+
+                for(var row = bounds.minY; row < bounds.maxY; row++) {
+                    for(var col = bounds.minX; col < bounds.maxX; col++) {
+                        var tile = this.game.map.tileset[row][col];
+
+                        var x = tile.offset.x,
+                            bx = tile.baseOffset.x,
+                            y = tile.offset.y,
+                            by = tile.baseOffset.y;
+
+                        ctx.drawImage(tileSheet, (bx + x) * _TILESIZE, (by + y) * _TILESIZE, _TILESIZE, _TILESIZE, col * _TILESIZE, row * _TILESIZE, _TILESIZE, _TILESIZE);
+
+                    }
+                }
+            }
+
+
+        },
+
+        renderFrame: function() {
 
             // Clear contexts
             this.backBuffercontext.clearRect(0,0,this.backBuffer.width,this.backBuffer.height);
@@ -287,22 +354,23 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             // Draw dynamic objects first
             ctx.translate(this.centerTiles.x * _TILESIZE - this.center.x , this.centerTiles.y * _TILESIZE - this.center.y);
 
-            // Draw visible entities
-            this.drawEntities();
+            // Draw background first!
+            this.drawBackground();
 
-            if(grid) {
+            if(this.grid) {
                 this.drawGrid();
             }
 
             this.drawTargetIndicator();
+
+            // Draw visible entities
+            this.drawEntities();
 
             ctx.restore();
 
             // Now draw static objects
 
             this.drawTileHover();
-
-
 
             
             // Debug FPS

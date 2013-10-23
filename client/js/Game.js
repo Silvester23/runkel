@@ -64,9 +64,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.client.onSpawnItem(function(id,x,y) {
                 if(!self.getEntityById(id)) {
                     var i = new Item(id,x,y);
-
+                    var colors = ["blue","green","red","yellow"];
+                    var color = colors[_.random(colors.length-1)];
                     i.setSprite("lilly");
                     i.setAnimation("idle",50);
+
+                    i.sprite.image.src = "img/lilly_" + color + ".png";
                     self.addEntity(i);
                     self.registerEntityPosition(i);
                 } else {
@@ -160,14 +163,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         registerEntityPosition: function(entity) {
-            console.log("registering " + entity.tileX,entity.tileY);
             if(entity) {
                 this.addToEntityGrid(entity,entity.tileX,entity.tileY);
             }
         },
 
         unregisterEntityPosition: function(entity) {
-            console.log("unregistering " + entity.tileX,entity.tileY);
             if(entity) {
                 this.removeFromEntityGrid(entity,entity.tileX,entity.tileY);
             }
@@ -188,6 +189,20 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
         forEachEntity: function(callback) {
             _.each(this.entities, function(entity) {
+                callback(entity);
+            });
+        },
+
+        forEachVisibleEntity: function(callback) {
+            var bounds = this.app.getVisibleTileBounds();
+            var visibleEntities = _.filter(this.entities, function(entity) {
+                return entity.visible &&
+                       entity.tileX >= bounds.minX &&
+                       entity.tileX < bounds.maxX &&
+                       entity.tileY >= bounds.minY &&
+                       entity.tileY < bounds.maxY;
+            });
+            _.each(visibleEntities, function(entity) {
                 callback(entity);
             });
         },
@@ -268,25 +283,33 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 var pos = this.getAbsoluteMouseGridPosition();
                 if(!_.isEqual(pos,this.player.getGridPosition())) {
                     console.log(pos.x, pos.y);
-                    var entity = this.getEntityAt(pos.x, pos.y);
+                    var entity = this.getEntityAt(pos.x, pos.y),
+                        walkTo = false;
 
 
                     if(entity) {
                         console.log("clicked " + entity.id);
                         if(entity instanceof Character) {
                             console.log("Don't walk onto other characters! That's just rude.");
+                            walkTo = false;
                         } else if(entity instanceof Item) {
+                            walkTo = true;
+                            /*
+                            this.client.sendMove(this.player.id,pos.x,pos.y);
+                            this.player.walkTo(pos.x, pos.y);
+                            */
 
-                            //this.player.walkTo(pos.x, pos.y);
-                            //this.player.setGridPosition(pos.x,pos.y);
-                            //this.client.sendMove(this.player.id,pos.x - this.player.tileX, pos.y - this.player.tileY);
                         }
                     } else {
-
-                        this.client.sendMove(this.player.id,pos.x,pos.y);
-                        this.player.walkTo(pos.x,pos.y);
+                        walkTo = true;
                         //this.player.setGridPosition(pos.x,pos.y,true);
                     }
+                    if(walkTo) {
+                        this.client.sendMove(this.player.id,pos.x,pos.y);
+                        this.player.walkTo(pos.x,pos.y);
+                    }
+
+
                 } else {
                     console.info("Clicked self.");
                 }
@@ -295,11 +318,17 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         getAbsoluteMouseGridPosition: function() {
-            var relPos = this.getRelativeMouseGridPosition();
-            //console.log(relPos.x-10, relPos.y-6);
+            var relPos = this.getRelativeMouseGridPosition(),
+                x = this.player.tileX + (relPos.x-this.app.centerTiles.x),
+                y = this.player.tileY + (relPos.y-this.app.centerTiles.y);
 
-            //console.log({x: this.player.tileX + (relPos.x-10), y: this.player.tileY + (relPos.y-6)});
-            return {x: this.player.tileX + (relPos.x-10), y: this.player.tileY + (relPos.y-6)};
+            x = x < 0 ? 0 : x;
+            y = y < 0 ? 0 : y;
+
+            x = x < this.map.width ? x : this.map.width-1;
+            y = y < this.map.height ? y : this.map.height-1;
+
+            return {x: x, y: y};
         },
 
         getRelativeMouseGridPosition: function() {
@@ -309,10 +338,18 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         rightclick: function() {
-            // Temporary test function
+            var x = this.mouse.x,
+                y = this.mouse.y;
             var guiElem = this.GUI.findElement(x,y);
             if(guiElem) {
                 // Do nothing
+            } else {
+                // Debug function
+                var pos = this.getAbsoluteMouseGridPosition(),
+                    entities = this.getEntitiesAt(pos.x,pos.y);
+
+
+                console.log(entities);
             }
             return false;
         },

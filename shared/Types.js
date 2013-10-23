@@ -17,6 +17,10 @@ Types = {
         }
     },
 
+    Tiles: {
+        GRASS: 1
+    },
+
     Messages: {
         HELLO: 1,
         WELCOME: 2,

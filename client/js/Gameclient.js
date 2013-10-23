@@ -14,6 +14,9 @@ define([], function () {
             this.handlers[Types.Messages.DESPAWN] = this.receiveDespawn;
             this.handlers[Types.Messages.MOVE] = this.receiveMove;
 
+
+
+
         },
 
         connect: function() {

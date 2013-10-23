@@ -13,6 +13,8 @@ define(['Sprite'], function(Sprite) {
             this.animations = null;
             this.currentAnimation = null;
             this.destroy = false;
+
+            this.visible = true;
         },
 
         setPosition: function (x, y) {

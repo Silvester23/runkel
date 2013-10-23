@@ -13,18 +13,15 @@ var Worldserver = Class.extend({
         this.outgoingQueues = {}
         this.ups = 20;
 
+        this.width = 5;
+        this.height = 5;
+
 
         // Tests
         this.items = {};
         for(var i = 0; i < 12; i++) {
-            this.items["lilly" + i] = new Item("lilly" + i, Types.Entities.Items.LILLY, _.random(1,28), _.random(1,13))
+            this.items["lilly" + i] = new Item("lilly" + i, Types.Entities.Items.LILLY, _.random(1,this.width), _.random(1,this.height))
         }
-        /*
-        this.items = {"lilly1": new Item("lilly1",Types.Entities.Items.LILLY, _.random(30), _.random(15)),
-            "lilly2": new Item("lilly2",Types.Entities.Items.LILLY, _.random(30), _.random(15)),
-            "lilly3": new Item("lilly3",Types.Entities.Items.LILLY, _.random(30), _.random(15))};
-        */
-        //this.items = ["lilly1","lilly2","lilly3"]
 
     },
 

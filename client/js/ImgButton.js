@@ -60,6 +60,12 @@ define(['Button'], function (Button) {
                     this.clickTime = null;
                 }
             }
+        },
+
+        getInfo: function() {
+            if(this.label) {
+                return this.label;
+            }
         }
 
     });

@@ -2,8 +2,11 @@ var Class = require("./lib/class.js"),
     url = require("url"),
     http = require("http"),
     fs = require("fs"),
-    test = require("express"),
-    _ = require("underscore");
+    _ = require("underscore"),
+    express = require("express"),
+    session = require("cookie-session"),
+    cookieParser = require("cookie-parser"),
+    RedisStore = require("connect-redis")(express);
 
 
 var Server = Class.extend({
@@ -13,46 +16,41 @@ var Server = Class.extend({
         this.connections = {};
         this.counter = 0;
 
-        var express = require("express"),
-            app = express(),
-            http = require('http'),
+        var app = express(),
             server = http.createServer(app),
             io = require('socket.io').listen(server),
             self = this;
 
-        server.listen(8000);
+
+
+        app.configure(function() {
+            var my_secret = "super-secret";
+
+            app.use(express.cookieParser());
+            app.use(express.session({
+                secret: my_secret,
+                key: 'connect.sid'
+            }));
+
+            app.use(function(req, res) {
+                //res.cookie("test","telefon");
+            });
+
+
+            app.use(express.static('../../client/'));
+            app.use(app.router);
+        });
 
         app.get( '/shared/:filename', function( req, res) {
             res.sendfile(req.params.filename, {root: "../../shared/"});
+            //console.log(req.cookies);
         });
 
         // Logger function for debug purposes. Enable in app.configure as needed
         var logger = function(req, res, next) {
             console.log(req.url);
             next();
-        }
-
-        app.configure(function() {
-            //app.use(logger);
-            app.use(express.static('../../client/'));
-            app.use(app.router);
-        });
-
-        /*
-        Old configuration. Might come in handy for debugging
-
-        app.configure(function(){
-            app.use(express.methodOverride());
-            app.use(express.bodyParser());
-            app.use(express.static('../../client/'));
-            app.use(express.errorHandler({
-                dumpExceptions: true,
-                showStack: true
-            }));
-            app.use(app.router);
-        });
-        */
-
+        };
 
         io.sockets.on('connection', function (socket) {
             var c = new Connection(socket, self);
@@ -61,6 +59,8 @@ var Server = Class.extend({
                 self.connect_callback(c);
             }
         });
+
+        server.listen(8000);
 
     },
 
@@ -95,7 +95,6 @@ var Connection = Class.extend({
 
 
         this.socket.on('message', function(data) {
-            console.log("Message received.");
             if(self.message_callback) {
                 var message = JSON.parse(data);
                 self.message_callback(message);
@@ -116,7 +115,6 @@ var Connection = Class.extend({
     },
 
     send: function(msg) {
-        console.log(msg);
         var data = JSON.stringify(msg);
         this.socket.send(data);
     },

@@ -1,12 +1,13 @@
 define(['Sprite'], function(Sprite) {
     var Entity = Class.extend({
-        init: function (id, x, y) {
+        init: function (id, x, y, name) {
             this.x = _TILESIZE * x;
             this.y = _TILESIZE * y;
 
             this.tileX = x;
             this.tileY = y;
             this.id = id;
+            this.name = name;
 
             // Visuals
             this.sprite = null;
@@ -20,6 +21,10 @@ define(['Sprite'], function(Sprite) {
         setPosition: function (x, y) {
             this.x = x;
             this.y = y;
+        },
+
+        getInfo: function() {
+            return this.name;
         },
 
         setGridPosition: function (tileX, tileY, dontmove) {
@@ -78,6 +83,15 @@ define(['Sprite'], function(Sprite) {
 
         setDestroy: function (v) {
             this.destroy = v;
+        },
+
+        getContextInformation: function() {
+            // Returns an array with all context menu options
+            var options = [
+                {label: "Inspect " + this.name}
+            ];
+
+            return options;
         }
 
     });

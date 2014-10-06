@@ -38,11 +38,10 @@ requirejs(['App', 'Game'],
         };
 
 
-        /*canvas.oncontextmenu = function (evt) {
+        canvas.oncontextmenu = function (evt) {
             app.setMouseCoordinates(evt);
             game.rightclick();
             return false;
         };
-        */
     }
 );

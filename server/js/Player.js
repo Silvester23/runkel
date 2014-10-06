@@ -1,7 +1,7 @@
 var Messages = require("./Message.js"),
     Class = require("./lib/class.js"),
     Avatar = require("./Avatar.js"),
-    Types = require("../../shared/Types.js")
+    Types = require("../../shared/Types.js"),
     _ = require("underscore");
 
 
@@ -9,10 +9,12 @@ var Messages = require("./Message.js"),
 var Player = Avatar.extend({
     init: function(connection, world) {
         // Make player's avatar spawn at random position
-        var x = Math.ceil(_.random(world.width)),
-            y = Math.ceil(_.random(world.height));
+        var x = Math.ceil(_.random(1,world.width-2)),
+            y = Math.ceil(_.random(1,world.height-2));
 
-        this._super(connection.id,x,y);
+        var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"];
+
+        this._super(connection.id,x,y,names[_.random(names.length-1)]);
         var self = this;
 
         this.connection = connection;
@@ -31,22 +33,65 @@ var Player = Avatar.extend({
 
             if(action === Types.Messages.HELLO) {
                 this.helloReceived = true;
-                self.connection.send(new Messages.Welcome(self.id, self.x, self.y).data);
+                self.connection.send(new Messages.Welcome(self.id, self.x, self.y,self.name).data);
             }
 
             if(action === Types.Messages.PICKUP) {
-                var itemId = data[1];
-                self.world.pushBroadcast(new Messages.Despawn(itemId).data, this.id);
-                delete self.world.items[itemId];
+                var item = self.world.getEntityById(data[1]);
+
+                if(item) {
+                    self.broadcast(new Messages.Pickup(self,item));
+
+                    // Add item to inventory, then delete it from entity lists
+                    self.pickUp(item);
+                    self.world.removeEntity(item);
+                } else {
+                    console.log("Received PICKUP on invalid item!");
+                }
+            }
+
+            if(action === Types.Messages.EQUIP) {
+                console.log("Received equip");
+                var item = self.getInventoryItemById(data[1]);
+
+                if(item) {
+                    self.equip(item);
+
+                    self.broadcast(new Messages.Equip(self,item));
+                }
+            }
+
+            if(action === Types.Messages.DROP) {
+                var item = self.getInventoryItemById(data[1]),
+                    x = data[2],
+                    y = data[3];
+
+                if(item) {
+                    if(self.drop(item)) {
+                        item.setPosition(x,y);
+                        self.broadcast(new Messages.Drop(self,item));
+                        self.world.addItem(item);
+                    } else {
+                        console.log("Something went wrong trying to drop an item.");
+                    }
+                } else {
+                    console.log("Received DROP on invalid item!");
+                }
             }
 
             if(action === Types.Messages.MOVE) {
-                var id = data[1],
-                    x = data[2],
-                    y = data[3];
-                console.log("Received move");
-                self.world.pushBroadcast(new Messages.Move(id,x,y).data, self.id);
+                var x = data[1],
+                    y = data[2];
+                self.broadcast(new Messages.Move(self,x,y));
                 self.setPosition(x,y);
+            }
+
+            if(action === Types.Messages.SPAWN) {
+                var id = data[1],
+                    entity = self.world.getEntityById(id);
+                if(entity) {
+                    self.broadcast(new Messages.Spawn(entity));
+                }
             }
         });
 
@@ -56,6 +101,13 @@ var Player = Avatar.extend({
             }
         });
 
+    },
+
+    broadcast: function(message, ignoreSelf) {
+        var ignoreSelf = ignoreSelf === undefined ? true : ignoreSelf;
+        var test = ignoreSelf === true ? this.id : undefined;
+        console.log(test);
+        this.world.pushBroadcast(message.data, test);
     },
 
     onExit: function(callback) {

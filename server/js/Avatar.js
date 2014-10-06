@@ -3,8 +3,8 @@ var Class = require("./lib/class.js"),
     Types = require("../../shared/Types.js");
 
 var Avatar = Character.extend({
-    init: function (id,x,y) {
-        this._super(id,Types.Entities.Characters.AVATAR,x,y);
+    init: function (id,x,y,name) {
+        this._super(id,Types.Entities.Characters.AVATAR,x,y,name);
     }
 });
 

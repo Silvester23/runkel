@@ -11,8 +11,7 @@ window.requestAnimFrame = (function(){
 })();
 
 
-if (!Array.prototype.indexOf)
-{
+if (!Array.prototype.indexOf) {
   Array.prototype.indexOf = function(elt /*, from*/)
   {
     var len = this.length >>> 0;
@@ -32,4 +31,16 @@ if (!Array.prototype.indexOf)
     }
     return -1;
   };
+}
+
+if (!String.prototype.format) {
+    String.prototype.format = function() {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function(match, number) {
+            return typeof args[number] != 'undefined'
+                ? args[number]
+                : match
+                ;
+        });
+    };
 }

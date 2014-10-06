@@ -8,12 +8,13 @@ Types = {
 
     Entities: {
         Characters: {
-            AVATAR: 1,
-            DRONE: 2
+            PLAYER: 1,
+            AVATAR: 2
         },
 
         Items: {
-            LILLY: 3
+            LILLY: 3,
+            BOOTS: 4
         }
     },
 
@@ -29,19 +30,25 @@ Types = {
         MESSAGE: 4,
         DESPAWN: 5,
         PICKUP: 6,
-        MOVE: 7
+        MOVE: 7,
+        DROP: 8,
+        EQUIP: 9
     },
 
     ButtonStates: {
         BASE: "base",
         DOWN: "down",
-        ACTIVE: "active"
+        ACTIVE: "active",
+        HOVER: "hover"
     },
 
     GUIElements: {
         IMGBUTTON: 1,
         SCREEN: 2,
-        TABLE: 3
+        TABLE: 3,
+        CONTEXTMENU: 4,
+        CONTEXTMENUBUTTON: 5,
+        INVENTORYICON: 6
     },
 
     Actions: {
@@ -59,15 +66,15 @@ Types.isEntity = function(type) {
     return _.some(Types.Entities, function(cat) {
         return _.contains(cat,type);
     });
-}
+};
 
 Types.isItem = function(type) {
     return _.contains(Types.Entities.Items,type);
-}
+};
 
 Types.isCharacter = function(type) {
     return _.contains(Types.Entities.Characters,type);
-}
+};
 
 if(!(typeof exports === 'undefined')) {
     module.exports = Types;

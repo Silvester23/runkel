@@ -1,38 +1,29 @@
-define(['Avatar','Item'], function(Avatar,Item) {
+define(['Avatar'], function(Avatar) {
     var Player = Avatar.extend({
-        init: function(id,x,y) {
-            this._super(id,x,y);
-            this.inventory = [];
-            this.inventorySize = 12;
-
-            var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"]
-
-            this.name = names[_.random(names.length-1)];
+        init: function(id,x,y,name) {
+            this._super(id,x,y,name);
             this.level = 1;
+            this.xp = 0;
+
         },
 
-        pickUp: function(item) {
-            if(item instanceof Item && this.hasFreeInventorySlot()) {
-                for(var i = 0; i < this.inventorySize; i++) {
-                    if(typeof this.inventory[i] === "undefined") {
-                        break;
-                    }
-                }
-                this.inventory[i] = item;
-                return true;
+        addXp: function(amount) {
+            var scaled = amount/(this.level);
+            if(this.xp + scaled >= 100) {
+                scaled -= (100-this.xp);
+                this.xp = 100;
+                this.levelup();
+                this.addXp(scaled);
             } else {
-                return false;
+                this.xp += scaled;
             }
         },
 
-        hasFreeInventorySlot: function() {
-            console.log(this.getNumItems());
-            return this.getNumItems() < this.inventorySize;
-        },
+        levelup: function() {
+            this.level += 1;
+            this.xp = this.xp % 100;
+        }
 
-        getNumItems: function() {
-            return _.filter(this.inventory, function(entity) { return typeof entity !== "undefined"}).length;
-        },
 
         });
     return Player;

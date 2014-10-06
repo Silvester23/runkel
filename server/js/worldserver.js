@@ -2,26 +2,34 @@ var Class = require("./lib/class.js"),
     Messages = require("./Message.js"),
     _ = require("underscore"),
     Types = require("../../shared/Types.js"),
-    Item = require("./Item.js");
+    Item = require("./Item.js"),
+    mapData = require("../../shared/world.js"),
+    Boots = require("./Boots.js");
 
 
 var Worldserver = Class.extend({
 
     init: function(server) {
         this.server = server;
-        this.players = {};
-        this.outgoingQueues = {}
+        this.outgoingQueues = {};
         this.ups = 20;
 
-        this.width = 5;
-        this.height = 5;
+        this.width = mapData.width;
+        this.height = mapData.height;
 
-
-        // Tests
+        this.entities = {};
+        this.players = {};
         this.items = {};
+
+
+        // Test
+        /*
         for(var i = 0; i < 12; i++) {
-            this.items["lilly" + i] = new Item("lilly" + i, Types.Entities.Items.LILLY, _.random(1,this.width), _.random(1,this.height))
+            this.items["lilly" + i] = new Item("lilly" + i, Types.Entities.Items.LILLY, _.random(1,this.width-2), _.random(1,this.height-2), "Lilie");
         }
+        */
+
+        this.addItem(new Boots("boots1",Types.Entities.Items.BOOTS,2,2,"Stiefel"));
 
     },
 
@@ -60,6 +68,22 @@ var Worldserver = Class.extend({
         }
     },
 
+    getEntityById: function(id) {
+        var entity = this.entities[id];
+        if(entity) {
+            return entity;
+        }
+    },
+
+    addEntity: function(entity) {
+        this.entities[entity.id] = entity;
+    },
+
+    addItem: function(item) {
+        this.items[item.id] = item;
+        this.addEntity(item);
+    },
+
     addPlayer: function(player) {
         var self = this;
 
@@ -67,34 +91,45 @@ var Worldserver = Class.extend({
             self.removePlayer(player);
         });
         this.players[player.id] = player;
+        this.addEntity(player);
         this.outgoingQueues[player.id] = [];
 
 
         // Could be moved to a callback
 
         // Announce connection to other players
-        this.pushBroadcast(new Messages.Spawn(player.id, Types.Entities.Characters.AVATAR, player.x, player.y).data, player.id);
+        this.pushBroadcast(new Messages.Spawn(player).data, player.id);
 
         // Announce other players to connecting player
         _.each(this.players, function(p) {
             if(p.id !== player.id) {
-                self.pushToPlayer(player, new Messages.Spawn(p.id, Types.Entities.Characters.AVATAR, p.x, p.y).data);
+                self.pushToPlayer(player, new Messages.Spawn(p).data);
             }
         });
 
-
         // Test, push items to player
         _.each(this.items, function(item) {
-            self.pushBroadcast(new Messages.Spawn(item.id, item.type, item.x, item.y).data);
+            self.pushBroadcast(new Messages.Spawn(item).data);
         });
     },
 
+    removeEntity: function(entity) {
+        if(entity.id in this.entities) {
+            delete this.entities[entity.id];
+        }
+
+        if(entity.id in this.items) {
+            delete this.items[entity.id];
+        }
+
+    },
+
     removePlayer: function(player) {
-        console.log("removing player");
         if(this.players[player.id]) {
             delete this.players[player.id];
+            this.removeEntity(player);
         }
-        this.pushBroadcast(new Messages.Despawn(player.id).data, player.id)
+        this.pushBroadcast(new Messages.Despawn(player).data, player.id);
 
         delete this.outgoingQueues[player.id]
     },

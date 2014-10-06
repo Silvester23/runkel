@@ -1,5 +1,7 @@
-define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GUI','Item','Gameclient','Avatar', 'Entity',
-    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Drone,Map,Character,GUI,Item,Gameclient,Avatar, Entity) {
+define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item','Gameclient','Avatar', 'Entity',
+    'Boots','EntityFactory',
+    '../../shared/Types'], function(Renderer,Player,Pathfinder,Updater,Map,Character,GUI,Item,Gameclient,Avatar, Entity,
+                                    Boots, EntityFactory) {
     var Game = Class.extend({
         init: function(app) {
             var self = this;
@@ -15,20 +17,27 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             this.entityGrid = [];
 
             this.map = new Map();
-
-            // Create Renderer and updater
             this.renderer = new Renderer(this);
             this.updater = new Updater(this);
-
-            this.GUI = new GUI();
-
-            // Create Pathfinder
             this.pathfinder = new Pathfinder();
+            this.entityFactory = new EntityFactory();
 
             this.currentTime = new Date().getTime();
 
-            this.dragElement = null;
             this.mouse = {x: 0, y: 0};
+
+            this.GUI = new GUI(this.mouse);
+
+            this.GUI.setApp(this.app);
+            this.GUI.onReleaseIcon(function(icon) {
+                var entity = icon.entity;
+                if(entity.drop()) {
+                    self.GUI.destroyInventoryIcon(icon);
+                }
+            });
+
+            this.dragElement = null;
+            this.hoverEntity = null;
 
 
         },
@@ -39,39 +48,56 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             var self = this;
             this.client = new Gameclient(this);
 
-            this.client.onWelcome(function(id,x,y) {
-                self.player = new Player(id,x,y);
+            this.client.onWelcome(function(id,x,y,name) {
+                self.player = self.entityFactory.createEntity(Types.Entities.Characters.PLAYER,id,x,y,name);
                 self.initPlayer(id);
                 self.addEntity(self.player);
 
-            })
+            });
 
-            this.client.onSpawnCharacter(function(id,x,y) {
+            this.client.onSpawnCharacter(function(id,type,x,y,name,inventory,equipped) {
                 if(!self.getEntityById(id)) {
-                    var a = new Avatar(id,x,y);
+                    var c = self.entityFactory.createEntity(type,id,x,y,name);
+                    self.initCharacter(c);
 
-                    self.initCharacter(a);
-                    self.addEntity(a);
+                    _.each(inventory, function(itemData) {
+                        var id = itemData[0],
+                            type = itemData[1],
+                            x = itemData[2],
+                            y = itemData[3],
+                            name = itemData[4];
+
+                        var item = self.entityFactory.createEntity(type,id,x,y,name);
+                        c.pickUp(item);
+                    });
+
+                    _.each(equipped, function(itemId) {
+
+                        var item = _.find(c.inventory, function(i) {
+                            return i.id == itemId;
+                        });
+
+
+                        c.equip(item);
+                    });
+
+                    self.addEntity(c);
                 } else {
                     console.log("Character already exists.");
                 }
-            })
+            });
 
-            this.client.onSpawnItem(function(id,x,y) {
+            this.client.onSpawnItem(function(id,type,x,y,name) {
                 if(!self.getEntityById(id)) {
-                    var i = new Item(id,x,y);
-                    var colors = ["blue","green","red","yellow"];
-                    var color = colors[_.random(colors.length-1)];
-                    i.setSprite("lilly");
-                    i.setAnimation("idle",50);
+                    var item = self.entityFactory.createEntity(type,id,x,y,name);
 
-                    i.sprite.image.src = "img/lilly_" + color + ".png";
-                    self.addEntity(i);
-                    self.registerEntityPosition(i);
+
+                    self.addEntity(item);
+
                 } else {
                     console.log("Item already exists.");
                 }
-            })
+            });
 
             this.client.onDespawn(function(id) {
                 var entity = self.getEntityById(id);
@@ -81,12 +107,41 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 } else {
                     console.log("Invalid despawn request on entity ID " + id);
                 }
-            })
+            });
 
             this.client.onEntityMove(function(id, x, y) {
                 var entity = self.getEntityById(id);
                 if(entity) {
                     entity.walkTo(x,y);
+                }
+            });
+
+            this.client.onEquip( function(charId, itemId) {
+                var c = self.getEntityById(charId);
+                if(c) {
+                    var item = c.getInventoryItemById(itemId);
+                    if(item) {
+                        c.equip(item);
+                    }
+                }
+            });
+
+            this.client.onPickup( function(charId, itemId) {
+                var c = self.getEntityById(charId);
+                if(c) {
+                    var item = self.getEntityById(itemId);
+                    if(item) {
+                        c.pickUp(item);
+                    }
+                    self.removeEntity(item);
+                }
+            });
+
+            this.client.onDrop( function(charId, itemId, x, y) {
+                var c = self.getEntityById(charId);
+                if(c) {
+                    var item = c.getInventoryItemById(itemId);
+                    item.drop();
                 }
             });
 
@@ -103,7 +158,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         initCharacter: function(character) {
             var self = this;
             if(character instanceof Character) {
-                this.registerEntityPosition(character);
 
                 character.onStep(function() {
                     self.registerEntityPosition(character);
@@ -115,6 +169,14 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
                 character.onRequestPathTo(function(src,dest) {
                     return self.pathfinder.findPath(src, dest);
+                });
+
+                character.onDropItem( function(item) {
+                    var pos = character.getGridPosition();
+                    item.setGridPosition(pos.x,pos.y);
+                    self.addEntity(item);
+
+                    self.client.sendDrop(item);
                 });
             }
         },
@@ -129,20 +191,19 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 _.each(self.getEntitiesAt(this.tileX,this.tileY), function(entity) {
                     if(entity instanceof Item) {
                         if(self.player.pickUp(entity)) {
-                            console.log("picking up " + entity.id);
                             self.unregisterEntityPosition(entity);
                             self.removeEntity(entity);
                             self.GUI.createInventoryIcons(self.player.inventory);
                             self.client.sendPickup(entity);
+                            if(self.player.equip(entity)) {
+                                self.client.sendEquip(entity);
+                            }
                         } else {
                             console.log("could not pick up " + entity.id);
                         }
                     }
                 });
             });
-
-
-            this.registerEntityPosition(this.player);
 
         },
 
@@ -159,17 +220,19 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
 
         registerEntityPosition: function(entity) {
             if(entity) {
-                this.addToEntityGrid(entity,entity.tileX,entity.tileY);
+                this.addToEntityGrid(entity);
             }
         },
 
         unregisterEntityPosition: function(entity) {
             if(entity) {
-                this.removeFromEntityGrid(entity,entity.tileX,entity.tileY);
+                this.removeFromEntityGrid(entity);
             }
         },
 
-        addToEntityGrid: function(entity, x, y) {
+        addToEntityGrid: function(entity) {
+            var x = entity.tileX,
+                y = entity.tileY;
             try {
                 this.entityGrid[y][x][entity.id] = entity;
             } catch(e) {
@@ -178,7 +241,9 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             }
         },
 
-        removeFromEntityGrid: function(entity, x, y) {
+        removeFromEntityGrid: function(entity) {
+            var x = entity.tileX,
+                y = entity.tileY;
             delete this.entityGrid[y][x][entity.id];
         },
 
@@ -207,7 +272,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
         },
 
         addEntity: function(entity) {
-            this.entities[entity.id] = entity;
+            if(!this.entities[entity.id]) {
+                this.entities[entity.id] = entity;
+                this.registerEntityPosition(entity);
+            } else {
+                console.log("Tried to add existing entity!");
+            }
         },
 
         removeEntity: function(entity) {
@@ -240,6 +310,13 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             return this.entityGrid[y][x];
         },
 
+        releaseElement: function() {
+            if(this.dragElement.release) {
+                this.dragElement.release();
+            }
+            this.dragElement = null;
+        },
+
         mousedown: function() {
             var self = this, guiElem,
                 x = this.mouse.x,
@@ -253,18 +330,55 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 guiElem.dragOriginX = guiElem.x;
                 guiElem.dragOriginY = guiElem.y;
                 guiElem.drag(x,y);
+
+                this.GUI.hideContextMenu();
                 return true;
             } else {
                 return false;
             }
         },
 
+        rightclick: function() {
+            // TEST
+            console.log(this.app.getVisibleTileBounds());
+
+
+            if(this.dragging()) {
+                this.releaseElement();
+            }
+            var x = this.mouse.x,
+                y = this.mouse.y;
+
+            var guiElem = this.GUI.findElement(x,y);
+            if(guiElem) {
+                this.GUI.showContextMenu(guiElem);
+            } else if(this.app.isInViewport(x,y)) {
+
+                var pos = this.getAbsoluteMouseGridPosition(),
+                    entities = this.getEntitiesAt(pos.x,pos.y);
+                if(_.size(entities) > 0) {
+                    this.GUI.showContextMenu(_.values(entities)[0]);
+                } else {
+                    // Get position with potentially invalid tile indices
+                    pos = this.getAbsoluteMouseGridPosition(true);
+                    if(this.map.isInBounds(pos.x,pos.y)) {
+                        // Click was on empty ground; send true as argument to GUI.
+                        this.GUI.showContextMenu(true);
+                    } else {
+                        this.GUI.hideContextMenu();
+                    }
+                }
+            } else {
+                this.GUI.hideContextMenu();
+            }
+
+
+            return false;
+        },
+
         click: function() {
             if(this.dragging()) {
-                if(this.dragElement.release) {
-                    this.dragElement.release();
-                }
-                this.dragElement = null;
+                this.releaseElement();
                 return;
             }
             var x = this.mouse.x,
@@ -273,14 +387,12 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             var guiElem = this.GUI.findElement(x,y);
             if(guiElem) {
                 this.GUI.click(guiElem.id, x, y);
-            } else if(this.app.isInBounds(x,y)) {
+            } else if(this.app.isInViewport(x,y)) {
 
                 var pos = this.getAbsoluteMouseGridPosition();
                 if(!_.isEqual(pos,this.player.getGridPosition())) {
-                    console.log(pos.x, pos.y);
                     var entity = this.getEntityAt(pos.x, pos.y),
                         walkTo = false;
-
 
                     if(entity) {
                         console.log("clicked " + entity.id);
@@ -289,10 +401,6 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                             walkTo = false;
                         } else if(entity instanceof Item) {
                             walkTo = true;
-                            /*
-                            this.client.sendMove(this.player.id,pos.x,pos.y);
-                            this.player.walkTo(pos.x, pos.y);
-                            */
 
                         }
                     } else {
@@ -300,7 +408,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                         //this.player.setGridPosition(pos.x,pos.y,true);
                     }
                     if(walkTo) {
-                        this.client.sendMove(this.player.id,pos.x,pos.y);
+                        this.client.sendMove(pos.x,pos.y);
                         this.player.walkTo(pos.x,pos.y);
                     }
 
@@ -310,18 +418,70 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
                 }
 
             }
+            this.GUI.hideContextMenu();
         },
 
-        getAbsoluteMouseGridPosition: function() {
+        hover: function() {
+            var oldEntity = this.hoverEntity;
+            if(this.player) {
+                var x = this.mouse.x,
+                    y = this.mouse.y;
+
+                if(!this.dragging()) {
+                    var elem = this.GUI.findElement(x,y);
+                    if((!elem) && this.app.isInViewport(x,y)) {
+                        var relPos = this.getRelativeMouseGridPosition();
+                        var absPos = this.getAbsoluteMouseGridPosition();
+                        if(relPos.x != this.curTileX || relPos.y != this.curTileY) {
+                            this.curTileX = relPos.x;
+                            this.curTileY = relPos.y;
+                        }
+
+                        if(!this.hoverEntity || absPos.x != this.hoverEntity.tileX || absPos.y != this.hoverEntity.tileY) {
+                            this.hoverEntity = this.getEntityAt(absPos.x,absPos.y);
+                        }
+
+                    } else if(elem) {
+                        this.curTileX = undefined;
+                        this.curTileY = undefined;
+
+                        if(_.isFunction(elem.hover)) {
+                            elem.hover();
+                        }
+                        this.hoverEntity = elem;
+
+                    } else {
+                        this.curTileX = undefined;
+                        this.curTileY = undefined;
+                    }
+                } else if(this.app.isInViewport(x,y)) {
+                    this.dragElement.drag(x,y);
+                } else {
+                    this.releaseElement();
+                }
+            }
+
+
+            // Check if hoverEntity has changed and if possible, blur the old one
+            if(oldEntity && this.hoverEntity !== oldEntity && _.isFunction(oldEntity.blur)) {
+                oldEntity.blur()
+            }
+        },
+
+        getAbsoluteMouseGridPosition: function(allowOutOfBounds) {
+
             var relPos = this.getRelativeMouseGridPosition(),
                 x = this.player.tileX + (relPos.x-this.app.centerTiles.x),
                 y = this.player.tileY + (relPos.y-this.app.centerTiles.y);
 
-            x = x < 0 ? 0 : x;
-            y = y < 0 ? 0 : y;
 
-            x = x < this.map.width ? x : this.map.width-1;
-            y = y < this.map.height ? y : this.map.height-1;
+            if(!allowOutOfBounds) {
+                x = x < 0 ? 0 : x;
+                y = y < 0 ? 0 : y;
+
+                x = x < this.map.width ? x : this.map.width-1;
+                y = y < this.map.height ? y : this.map.height-1;
+            }
 
             return {x: x, y: y};
         },
@@ -332,39 +492,7 @@ define(['Renderer','Player','Pathfinder','Updater','Drone','Map','Character','GU
             return {x: tileX, y: tileY};
         },
 
-        rightclick: function() {
-            var x = this.mouse.x,
-                y = this.mouse.y;
-            var guiElem = this.GUI.findElement(x,y);
-            if(guiElem) {
-                // Do nothing
-            } else {
-                // Debug function
-                var pos = this.getAbsoluteMouseGridPosition(),
-                    entities = this.getEntitiesAt(pos.x,pos.y);
 
-
-                console.log(entities);
-            }
-            return false;
-        },
-
-        hover: function() {
-            var x = this.mouse.x,
-                y = this.mouse.y;
-
-            if(!this.dragging()) {
-
-                if(!this.GUI.findElement(x,y) && this.app.isInBounds(x,y)) {
-                    var pos = this.getRelativeMouseGridPosition();
-                    this.curTileX = pos.x;
-                    this.curTileY = pos.y;
-                }
-            } else {
-                this.dragElement.drag(x,y);
-            }
-
-        },
 
         dragging: function() {
             return this.dragElement != null;

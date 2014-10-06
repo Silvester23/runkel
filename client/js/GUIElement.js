@@ -8,6 +8,8 @@ define([], function () {
         init: function (data) {
             var self = this;
             this.visible = true;
+            this.hasContext = false;
+
             _.each(_.keys(data), function (key) {
                 self[key] = data[key];
             });
@@ -70,7 +72,16 @@ define([], function () {
 
         onHide: function (callback) {
             this.hide_callback = callback;
+        },
+
+        appendTo: function(guiElement) {
+            this.parent = guiElement;
+        },
+
+        getInfo: function() {
+            return "";
         }
+
     });
     return GUIElement;
 });

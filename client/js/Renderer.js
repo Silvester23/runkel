@@ -1,4 +1,4 @@
-define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
+define(['ImgButton','Screen','Player','Character','ContextMenu'], function(ImgButton,Screen,Player,Character,ContextMenu) {
     var Renderer = Class.extend({
         init: function(game) {
             
@@ -21,7 +21,6 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
             this.center = {x: 0, y: 0};
             this.centerTiles = this.game.app.centerTiles;
-
 
             // Debug enable
             this.grid = false;
@@ -113,6 +112,11 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             // Draw black footer bar
             ctx.fillRect(0,this.game.app.viewport.height,this.game.app.viewport.width,this.game.app.height-this.game.app.viewport.height);
 
+            // Draw info box
+            this.drawInfoBox();
+
+
+            // Draw visible GUI elements
             _.each(this.game.GUI.elements, function(elem) {
                 if(elem.visible) {
                     if(elem instanceof ImgButton) {
@@ -121,15 +125,67 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
                     else if(elem instanceof Screen) {
                         self.drawScreen(elem);
                     }
+                    else if(elem instanceof ContextMenu) {
+                        self.drawContextMenu(elem);
+                    }
                 }
             });
+        },
+
+        drawInfoBox: function() {
+            var ctx = this.getContext(),
+                width = 150,
+                height = 30,
+                offset = 15;
+                x = this.game.app.viewport.width - width - offset,
+                y = this.game.app.viewport.height + offset;
+            ctx.clearRect(x, y, width, height);
+
+            if(this.game.hoverEntity) {
+                var info = this.game.hoverEntity.getInfo ? this.game.hoverEntity.getInfo() : this.game.hoverEntity.id;
+                this.drawText(info,x+offset,y+height-offset);
+            }
+        },
+
+        drawContextMenu: function(menu) {
+            // Very much WIP
+
+            var self = this,
+                ctx = this.getContext();
+            ctx.save();
+
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(menu.x,menu.y,menu.width,menu.height);
+            ctx.fillStyle = "#000000";
+            ctx.strokeRect(menu.x,menu.y,menu.width,menu.height);
+
+
+            // Draw buttons
+            _.each(menu.buttons, function(button) {
+                if(button.active) {
+                    ctx.fillStyle = "#0000FF";
+                } else {
+                    ctx.fillStyle = "#FF0000";
+                }
+                ctx.globalAlpha = 0.5;
+                ctx.fillRect(button.x,button.y,button.width,button.height);
+                ctx.save();
+                ctx.fillStyle = "#000000";
+                ctx.strokeRect(button.x,button.y,button.width,button.height);
+                ctx.restore();
+                ctx.globalAlpha = 1;
+                self.drawText(button.label,button.x + menu.padding[3],button.y + button.height/2);
+            });
+
+
+            ctx.restore();
         },
 
         drawScreen: function(screen) {
             this.drawStandardScreen(screen);
             switch(screen.id) {
                 case "screen_inventory":
-
                     this.drawInventoryScreen(screen);
                     break;
                 case "screen_character":
@@ -171,7 +227,6 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             ctx.save();
             ctx.globalAlpha = 0.3;
 
-            //console.log(table);
             for(var i = 0; i <= table.rows; i++) {
                 ctx.fillRect(x,y+(i*table.cellsize),table.cellsize*(table.cols),1);
             }
@@ -183,8 +238,10 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
         },
 
         drawInventoryIcon: function(icon) {
-            var ctx = this.getContext();
-            ctx.drawImage(icon.entity.sprite.image, icon.x,icon.y);
+            var ctx = this.getContext(),
+                y = icon.entity.sprite.image.height - icon.height;
+
+            ctx.drawImage(icon.entity.sprite.image, 0,y, icon.width, icon.height, icon.x,icon.y, icon.width, icon.height);
         },
 
         drawCharacterScreen: function(screen) {
@@ -194,6 +251,22 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             this.drawText("Name: " + this.game.player.name, x,y);
             y += 20;
             this.drawText("Level: " + this.game.player.level, x,y);
+            y += 20;
+
+            this.drawText("Exp:", x,y);
+
+            this.drawProgressBar(x+50,y-9,100,10,this.game.player.xp/100);
+
+            // Debug
+            y += 20;
+            this.drawText("" + this.game.player.xp + "%", x+30, y);
+        },
+
+        drawProgressBar: function(x,y,width,height,fill) {
+            var ctx = this.getContext();
+            ctx.fillRect(x,y,width*fill,height);
+            ctx.strokeRect(x,y,width,height);
+
         },
 
         drawStandardScreen: function(screen) {
@@ -239,19 +312,19 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
             // Draw all game objects
             this.game.forEachVisibleEntity(function(entity) {
-                self.drawEntity(entity,self.backBuffercontext);
+                self.drawEntity(entity);
             });
 
 
         },
 
-        drawEntity: function(entity,context) {
-            var sprite = entity.sprite;
-            var anim = entity.currentAnimation;
-
+        drawEntity: function(entity) {
+            var context = this.getContext(),
+                sprite = entity.sprite,
+                anim = entity.currentAnimation;
 
             if(anim && sprite) {
-                var frame = anim.currentFrame,
+                frame = anim.currentFrame,
                 x = frame.x,
                 y = frame.y,
                 w = sprite.width,
@@ -259,9 +332,9 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
                 dx = entity.x,
                 dy = entity.y;
 
-            }
-
             context.save();
+
+
             if(entity instanceof Player) {
                 context.translate(-(this.centerTiles.x * _TILESIZE - this.center.x ), -(this.centerTiles.y * _TILESIZE - this.center.y));
                 context.translate(this.centerTiles.x * _TILESIZE, this.centerTiles.y * _TILESIZE);
@@ -271,17 +344,43 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
 
             try {
                 context.drawImage(sprite.image, x, y, w, h, 0, 0, w, h);
+
+                if(entity instanceof Character) {
+                    _.each(entity.equipped, function(item) {
+                        var sprite = item.sprite,
+                            itemAnim = item.currentAnimation,
+                            frame = anim.currentFrame;
+                        if(sprite && itemAnim) {
+                                index = frame.index < itemAnim.length ? frame.index : frame.index % itemAnim.length;
+
+                            var frame = anim.currentFrame,
+                                x = sprite.width * index,
+                                y = sprite.height * anim.row,
+                                dx = 0,
+                                dy = 0,
+                                w = sprite.width,
+                                h = sprite.height;
+
+                           // console.log(x,y,w,h);
+
+                            context.drawImage(sprite.image, x, y, w, h, dx, dy, w, h);
+                        }
+                    });
+                }
+
             } catch(e) {
                 console.log(entity);
                 throw(e);
             }
             context.restore();
-
+            }
         },
 
-        drawText: function(text, x, y, font, align, ctx) {
-            var font = typeof font !== 'undefined' ? font : '15px Courier',
-                ctx = typeof ctx !== 'undefined' ? ctx : this.getContext();
+        drawText: function(text, x, y, fontSize, fontFace, align) {
+            var fontSize = typeof fontSize !== 'undefined' ? fontSize: '15px',
+                fontFace = typeof fontFace !== 'undefined' ? fontFace:  'Courier',
+                font = fontSize + " " + fontFace,
+                ctx = this.getContext();
             ctx.save();
             if(typeof align !== 'undefined') {
                 ctx.textAlign = align;
@@ -294,8 +393,6 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
         },
 
         drawBackground: function() {
-            // Eventually this needs to depend on dynamic map data, for now it's pretty static
-
 
             var ctx = this.getContext();
             /*
@@ -309,7 +406,6 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
             if(this.game.player) {
 
                 var bounds = this.game.app.getVisibleTileBounds();
-
 
                 for(var row = bounds.minY; row < bounds.maxY; row++) {
                     for(var col = bounds.minX; col < bounds.maxX; col++) {
@@ -393,8 +489,7 @@ define(['ImgButton','Screen','Player'], function(ImgButton,Screen,Player) {
                 this.lastTime = nowTime;
             }
             this.frameCount++;
-        
-            //this.drawText("FPS: " + this.realFPS + " / " + this.maxFPS, 30, 30, false);
+
             this.drawText("FPS: " + this.realFPS, 5, 15);
         }
     });

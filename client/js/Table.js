@@ -8,7 +8,7 @@ define(['GUIElement'], function (GUIElement) {
         getSnapPosition: function (icon) {
             var x = icon.x - this.x + icon.width / 2,
                 y = icon.y - this.y + icon.height / 2;
-            if (this.isInBounds(x, y)) {
+            if (this.isInViewport(x, y)) {
                 var snapX = Math.floor(x / this.cellsize) * this.cellsize + (this.cellsize - icon.entity.getSprite().width) / 2;
                 var snapY = Math.floor(y / this.cellsize) * this.cellsize + (this.cellsize - icon.entity.getSprite().width) / 2;
                 return {x: this.x + snapX, y: this.y + snapY}
@@ -32,13 +32,13 @@ define(['GUIElement'], function (GUIElement) {
 
 
             var index = -1;
-            if (this.isInBounds(x, y)) {
+            if (this.isInViewport(x, y)) {
                 index = Math.floor(x / this.cellsize) + Math.floor(y / this.cellsize) * this.cols;
             }
             return index;
         },
 
-        isInBounds: function (x, y) {
+        isInViewport: function (x, y) {
             return (x >= 0 && x <= this.width && y >= 0 && y <= this.height)
         }
     });

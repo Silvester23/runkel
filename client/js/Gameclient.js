@@ -13,9 +13,9 @@ define([], function () {
             this.handlers[Types.Messages.SPAWN] = this.receiveSpawn;
             this.handlers[Types.Messages.DESPAWN] = this.receiveDespawn;
             this.handlers[Types.Messages.MOVE] = this.receiveMove;
-
-
-
+            this.handlers[Types.Messages.PICKUP] = this.receivePickup;
+            this.handlers[Types.Messages.EQUIP] = this.receiveEquip;
+            this.handlers[Types.Messages.DROP] = this.receiveDrop;
 
         },
 
@@ -39,10 +39,11 @@ define([], function () {
             this.connected = true;
             var id = data[1],
                 x = data[2],
-                y = data[3];
-            console.log(data)
+                y = data[3],
+                name = data[4];
+            console.log(data);
             if(this.welcome_callback) {
-                this.welcome_callback(id,x,y);
+                this.welcome_callback(id,x,y,name);
             } else {
                 console.error("ERROR: No welcome callback!");
             }
@@ -52,14 +53,17 @@ define([], function () {
             var id = data[1],
                 type = data[2],
                 x = data[3],
-                y = data[4];
+                y = data[4],
+                name = data[5];
             if(Types.isCharacter(type)) {
+               var inventory = data[6],
+                    equipped = data[7];
                 if(this.spawn_character_callback) {
-                    this.spawn_character_callback(id,x,y);
+                    this.spawn_character_callback(id,type,x,y,name,inventory,equipped);
                 }
             } else if(Types.isItem(type)) {
                 if(this.spawn_item_callback) {
-                    this.spawn_item_callback(id,x,y);
+                    this.spawn_item_callback(id,type,x,y,name);
                 }
             }
         },
@@ -81,8 +85,40 @@ define([], function () {
             }
         },
 
+        receivePickup: function(data) {
+            var charId = data[1],
+                itemId = data[2];
+            if(this.pickup_callback) {
+                this.pickup_callback(charId,itemId);
+            } else {
+                console.log("No pickup callback!");
+            }
+        },
+
+        receiveEquip: function(data) {
+             var charId = data[1],
+                 itemId = data[2];
+            if(this.equip_callback) {
+                this.equip_callback(charId,itemId);
+            } else {
+                console.log("No equip callback!");
+            }
+        },
+
+        receiveDrop: function(data) {
+            var charId = data[1],
+                itemId = data[2],
+                x = data[3],
+                y = data[4];
+            if(this.drop_callback) {
+                this.drop_callback(charId,itemId,x,y);
+            } else {
+                console.log("No drop callback!");
+            }
+        },
+
         receiveActionBatch: function(actions) {
-            var self = this
+            var self = this;
             _.each(actions, function(action) {
                 self.receiveAction(action);
             });
@@ -117,8 +153,20 @@ define([], function () {
             this.sendMessage([Types.Messages.PICKUP,item.id]);
         },
 
-        sendMove: function(id, x, y) {
-            this.sendMessage([Types.Messages.MOVE, id, x, y]);
+        sendEquip: function(item) {
+            this.sendMessage([Types.Messages.EQUIP,item.id]);
+        },
+
+        sendMove: function(x, y) {
+            this.sendMessage([Types.Messages.MOVE, x, y]);
+        },
+
+        sendSpawn: function(item) {
+            this.sendMessage([Types.Messages.SPAWN,item.id]);
+        },
+
+        sendDrop: function(item) {
+            this.sendMessage([Types.Messages.DROP,item.id,item.tileX,item.tileY]);
         },
 
         onWelcome: function(callback) {
@@ -144,7 +192,19 @@ define([], function () {
 
         onEntityMove: function(callback) {
             this.entity_move_callback = callback;
+        },
+
+        onEquip: function(callback) {
+            this.equip_callback = callback;
+        },
+
+        onPickup: function(callback) {
+            this.pickup_callback = callback;
+        },
+
+        onDrop: function(callback) {
+            this.drop_callback = callback;
         }
     });
     return Gameclient;
-})
+});

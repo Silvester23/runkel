@@ -7,14 +7,15 @@ var Messages = require("./Message.js"),
 
 
 var Player = Avatar.extend({
-    init: function(connection, world) {
+    init: function(connection, world, id) {
+        console.log("Creating player with id " + id);
         // Make player's avatar spawn at random position
         var x = Math.ceil(_.random(1,world.width-2)),
             y = Math.ceil(_.random(1,world.height-2));
 
         var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"];
 
-        this._super(connection.id,x,y,names[_.random(names.length-1)]);
+        this._super(id,x,y,names[_.random(names.length-1)]);
         var self = this;
 
         this.connection = connection;
@@ -104,14 +105,18 @@ var Player = Avatar.extend({
     },
 
     broadcast: function(message, ignoreSelf) {
-        var ignoreSelf = ignoreSelf === undefined ? true : ignoreSelf;
-        var test = ignoreSelf === true ? this.id : undefined;
-        console.log(test);
-        this.world.pushBroadcast(message.data, test);
+        ignoreSelf = ignoreSelf === undefined ? true : ignoreSelf;
+        // If ignoreSelf is not set, pass empty list as ignore argument to ignore nothing.
+        var ignoreList = ignoreSelf ? this.id : [];
+        this.world.pushBroadcast(message.data, ignoreList);
     },
 
     onExit: function(callback) {
         this.exit_callback = callback;
+    },
+
+    getConnection: function() {
+        return this.connection;
     }
 });
 

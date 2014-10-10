@@ -1,66 +1,75 @@
 var Class = require("./lib/class.js"),
-    url = require("url"),
     http = require("http"),
-    fs = require("fs"),
     _ = require("underscore"),
     express = require("express"),
-    session = require("cookie-session"),
+    session = require("express-session"),
     cookieParser = require("cookie-parser"),
-    RedisStore = require("connect-redis")(express);
+    cookie = require("cookie"),
+    myqsl = require("mysql"),
+    Utils = require("./Utils.js");
 
 
 var Server = Class.extend({
     init: function() {
+
         console.log("Initializing server.");
 
         this.connections = {};
         this.counter = 0;
 
+        // Set up server and express ap
         var app = express(),
             server = http.createServer(app),
             io = require('socket.io').listen(server),
             self = this;
 
+        // Configure express app
+        var my_secret = "super-secret";
 
+        app.use(cookieParser(my_secret));
+        app.use(session({
+            secret: my_secret,
+            httpOnly: false,
+            resave: true,
+            saveUninitialized: true
+        }));
 
-        app.configure(function() {
-            var my_secret = "super-secret";
+        app.use(express.static('../../client/'));
 
-            app.use(express.cookieParser());
-            app.use(express.session({
-                secret: my_secret,
-                key: 'connect.sid'
-            }));
-
-            app.use(function(req, res) {
-                //res.cookie("test","telefon");
-            });
-
-
-            app.use(express.static('../../client/'));
-            app.use(app.router);
-        });
 
         app.get( '/shared/:filename', function( req, res) {
-            res.sendfile(req.params.filename, {root: "../../shared/"});
-            //console.log(req.cookies);
+            res.sendFile(req.params.filename, {root: "../../shared/"});
         });
 
-        // Logger function for debug purposes. Enable in app.configure as needed
-        var logger = function(req, res, next) {
-            console.log(req.url);
-            next();
-        };
+        // Configure authorization
+        io.set('authorization', function (data, callback) {
+            if(data.headers.cookie) {
+                console.log("I'll allow it...");
+                var cookies = cookie.parse(data.headers.cookie);
+                console.log(cookies);
 
-        io.sockets.on('connection', function (socket) {
-            var c = new Connection(socket, self);
-            self.addConnection(c);
-            if(self.connect_callback) {
-                self.connect_callback(c);
+                callback(null, true);
+            } else {
+                callback("No cookie was transmitted.", false);
             }
         });
 
+        // Configure io connections
+        io.sockets.on('connection', function (socket) {
+
+            var c = new Connection(socket, self);
+
+            self.addConnection(c);
+            if(self.connect_callback) {
+                self.connect_callback(c,"test_id");
+            }
+            self.counter++;
+
+        });
+
+
         server.listen(8000);
+
 
     },
 

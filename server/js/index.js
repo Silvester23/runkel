@@ -7,9 +7,12 @@ var world = new World(server);
 
 world.run();
 
-server.onConnect(function(connection) {
-    world.addPlayer(new Player(connection, world));
+
+server.onConnect(function(connection, id) {
+    world.addPlayer(new Player(connection, world, id));
 })
+
+
 
 
 

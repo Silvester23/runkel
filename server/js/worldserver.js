@@ -22,14 +22,8 @@ var Worldserver = Class.extend({
         this.items = {};
 
 
-        // Test
-        /*
-        for(var i = 0; i < 12; i++) {
-            this.items["lilly" + i] = new Item("lilly" + i, Types.Entities.Items.LILLY, _.random(1,this.width-2), _.random(1,this.height-2), "Lilie");
-        }
-        */
-
-        this.addItem(new Boots("boots1",Types.Entities.Items.BOOTS,2,2,"Stiefel"));
+        // Add some items for test only
+        this.addItem(new Boots("boots1",Types.Entities.Items.BOOTS,2,2,"Boots"));
 
     },
 
@@ -47,12 +41,12 @@ var Worldserver = Class.extend({
 
             if(queue.length > 0) {
                 try {
-                    var c = this.server.connections[id];
-                    console.log("broadcasting to id " + id);
+                    var c = this.getPlayer(id).getConnection();
+                    console.log("broadcasting to id " + c.id);
                     c.send(queue);
                     this.outgoingQueues[id] = [];
                 } catch(e) {
-                    console.log("error debug: " + id + ' ' + this.server.connections);
+                    console.log("error debug: " + c.id + ' ' + this.server.connections);
 
                     throw(e);
                 }
@@ -149,7 +143,6 @@ var Worldserver = Class.extend({
         } else if(!ignore instanceof Array) {
             console.error("pushBroadcast: invalid ignore id/list.");
         }
-
 
         for(var id in this.outgoingQueues) {
             if(!_.contains(ignore, id)) {

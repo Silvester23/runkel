@@ -1,5 +1,6 @@
 var Class = require("./lib/class.js"),
-    Entity = require("./Entity.js");
+    Entity = require("./Entity.js"),
+    _ = require("underscore");
 
 /*
  * This is a mid-level class that will be needed later on. Right now it just passes everything through to Entity.

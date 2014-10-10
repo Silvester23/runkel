@@ -8,7 +8,6 @@ var Message = Class.extend({
     init: function(message) {
         this.data = [Types.Messages.MESSAGE, message];
     }
-
 });
 
 Messages.Message = Message;

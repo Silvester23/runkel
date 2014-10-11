@@ -5,7 +5,7 @@ var Class = require("./lib/class.js"),
     session = require("express-session"),
     cookieParser = require("cookie-parser"),
     cookie = require("cookie"),
-    myqsl = require("mysql"),
+    mysql = require("mysql"),
     Utils = require("./Utils.js");
 
 
@@ -34,19 +34,27 @@ var Server = Class.extend({
             saveUninitialized: true
         }));
 
-        app.use(express.static('../../client/'));
 
+        app.use(express.static('../../client/'));
 
         app.get( '/shared/:filename', function( req, res) {
             res.sendFile(req.params.filename, {root: "../../shared/"});
         });
 
+
         // Configure authorization
         io.set('authorization', function (data, callback) {
             if(data.headers.cookie) {
                 console.log("I'll allow it...");
-                var cookies = cookie.parse(data.headers.cookie);
-                console.log(cookies);
+                var raw_cookies = cookie.parse(data.headers.cookie);
+                var cookies = cookieParser.signedCookies(raw_cookies, my_secret);
+                if(raw_cookies['connect.sid'] == cookies['connect.sid']) {
+                    // If the values are equal, the signature was not resolved properly, i.e. the cookie has been tampered with. Reject connection
+                    callback("Invalid connection attempt", true);
+                }
+
+                // Cookie was valid. Set connect.sid as authId
+                data.authId = cookies['connect.sid'];
 
                 callback(null, true);
             } else {
@@ -56,12 +64,16 @@ var Server = Class.extend({
 
         // Configure io connections
         io.sockets.on('connection', function (socket) {
+            if(!socket.handshake.authId) {
+                // authId should always be set here
+                console.error("No authId set on connection!");
+            }
 
             var c = new Connection(socket, self);
 
             self.addConnection(c);
             if(self.connect_callback) {
-                self.connect_callback(c,"test_id");
+                self.connect_callback(c,socket.handshake.authId);
             }
             self.counter++;
 

@@ -9,13 +9,19 @@ var Messages = require("./Message.js"),
 var Player = Avatar.extend({
     init: function(connection, world, id) {
         console.log("Creating player with id " + id);
+
+
         // Make player's avatar spawn at random position
         var x = Math.ceil(_.random(1,world.width-2)),
             y = Math.ceil(_.random(1,world.height-2));
 
+
+        // Debug stuff
         var names = ["Telefonmann","Orangutan-Klaus","Helmut Körschgens","Nihil Baxter","Jürgeline","Erika","00 Schneider"];
 
         this._super(id,x,y,names[_.random(names.length-1)]);
+
+
         var self = this;
 
         this.connection = connection;

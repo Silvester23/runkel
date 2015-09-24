@@ -20,17 +20,17 @@ define([], function () {
         },
 
         connect: function() {
+            console.log("hallo");
             var self = this;
             this.socket = io.connect(this.host + ":" + this.port);
-
 
             this.socket.on('connect', function () {
                 msg = [Types.Messages.HELLO];
                 self.sendMessage(msg);
+            });
 
-                self.socket.on('message', function(data) {
-                    self.receiveMessage(data);
-                });
+            this.socket.on('message', function(data) {
+                self.receiveMessage(data);
             });
 
         },
@@ -174,7 +174,7 @@ define([], function () {
         },
 
         onSpawn: function(callback) {
-            console.log("--- WARNING: onSpawn is deprecated! ---\n Use specific functions instead.");
+            console.warn("--- WARNING: onSpawn is deprecated! ---\n Use specific functions instead.");
             this.spawn_callback = callback;
         },
 

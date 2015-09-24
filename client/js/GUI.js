@@ -3,8 +3,8 @@
  */
 //'ImgButton','Screen','InventoryIcon','Table','GUIElement','Entity','ContextMenu','ContextMenuButton',
 // ImgButton,Screen,InventoryIcon,Table,GUIElement,Entity,ContextMenu,ContextMenuButton,
-define(['GUIElementFactory', 'GUIElement','Entity','ContextMenuButton',
-    '../GUIData/GUIData'], function (GUIElementFactory, GUIElement, Entity, ContextMenuButton) {
+define(['GUIElementFactory', 'GUIElement','Entity','ContextMenuButton', 'Button',
+    '../GUIData/GUIData'], function (GUIElementFactory, GUIElement, Entity, ContextMenuButton, ImageButton) {
     var GUI = Class.extend({
         init: function (mouse) {
             this.mouse = mouse;
@@ -211,18 +211,32 @@ define(['GUIElementFactory', 'GUIElement','Entity','ContextMenuButton',
 
         },
 
-        click: function(elemId, x, y) {
-            console.log(elemId);
-            try {
-                if(this.elements[elemId]) {
-                    this.elements[elemId].click(x, y);
-                }
-            }
-            catch(e) {
-                console.error("Error trying to click elemId " + elemId);
-                throw(e);
+
+
+        click: function(x, y) {
+            // Try to click an element at the given position, return true if successful, false if there is no element
+            var elem = this.findElement(x,y);
+            if(elem) {
+                elem.click();
+                return true;
+            } else {
+                return false;
             }
         },
+
+        mousedown: function(x,y) {
+
+            // Try to mousedown an element at the given position, return true if successful, false if there is no element
+            var elem = this.findElement(x,y);
+
+            if(elem) {
+                elem.mousedown();
+                return true;
+            } else {
+                return false;
+            }
+        },
+
 
         findElement: function(x,y, ignore) {
             /* Find highest visible element at given position, if none return false.
@@ -385,8 +399,6 @@ define(['GUIElementFactory', 'GUIElement','Entity','ContextMenuButton',
             }
         },
 
-
-
         destroyInventoryIcon: function(icon) {
             if(icon.id) {
                 delete this.icons[icon.id];
@@ -402,6 +414,14 @@ define(['GUIElementFactory', 'GUIElement','Entity','ContextMenuButton',
 
         setApp: function(app) {
             this.app = app;
+        },
+
+        resetImageButtons: function() {
+            _.each(this.elements, function(elem) {
+                if(elem instanceof ImageButton) {
+                    elem.reset();
+                }
+            });
         }
 
 

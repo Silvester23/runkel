@@ -37,6 +37,21 @@ define(['Button'], function (Button) {
             this.clickTime = new Date().getTime();
         },
 
+        mousedown: function() {
+            this.setState(Types.ButtonStates.DOWN);
+        },
+
+        reset: function() {
+            switch(this.nextState) {
+                case Types.ButtonStates.ACTIVE:
+                    this.setState(Types.ButtonStates.BASE);
+                    break;
+                case Types.ButtonStates.BASE:
+                    this.setState(Types.ButtonStates.ACTIVE);
+                    break;
+            }
+        },
+
         setState: function (state) {
             this.state = state;
             this.updateImage();
@@ -48,7 +63,8 @@ define(['Button'], function (Button) {
 
         update: function (time) {
             if (this.clickTime) {
-                if (this.state == Types.ButtonStates.DOWN && time - this.clickTime > 100) {
+                if (this.state == Types.ButtonStates.DOWN && time - this.clickTime > 25) {
+                    // Force slight delay before state change for aesthetic reasons
                     switch (this.nextState) {
                         case Types.ButtonStates.ACTIVE:
                             this.activate();

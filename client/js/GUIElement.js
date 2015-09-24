@@ -66,6 +66,10 @@ define([], function () {
 
         },
 
+        mousedown: function(evt) {
+
+        },
+
         onShow: function (callback) {
             this.show_callback = callback;
         },

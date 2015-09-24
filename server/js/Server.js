@@ -26,13 +26,18 @@ var Server = Class.extend({
         // Configure express app
         var my_secret = "super-secret";
 
+
         app.use(cookieParser(my_secret));
+
+        /*
         app.use(session({
             secret: my_secret,
             httpOnly: false,
             resave: true,
             saveUninitialized: true
         }));
+        */
+
 
 
         app.use(express.static('../../client/'));
@@ -42,29 +47,31 @@ var Server = Class.extend({
         });
 
 
+
         // Configure authorization
-        io.set('authorization', function (data, callback) {
-            if(data.headers.cookie) {
-                console.log("I'll allow it...");
-                var raw_cookies = cookie.parse(data.headers.cookie);
+
+        io.use(function(socket, next) {
+            var data = socket.handshake.headers;
+            if(data.cookie) {
+                var raw_cookies = cookie.parse(data.cookie);
                 var cookies = cookieParser.signedCookies(raw_cookies, my_secret);
                 if(raw_cookies['connect.sid'] == cookies['connect.sid']) {
                     // If the values are equal, the signature was not resolved properly, i.e. the cookie has been tampered with. Reject connection
-                    callback("Invalid connection attempt", true);
+                    next(new Error("Invalid connection attempt"));
                 }
 
                 // Cookie was valid. Set connect.sid as authId
                 data.authId = cookies['connect.sid'];
-
-                callback(null, true);
+                next()
             } else {
-                callback("No cookie was transmitted.", false);
+                next(new Error("No cookie was transmitted."));
             }
         });
 
         // Configure io connections
         io.sockets.on('connection', function (socket) {
-            if(!socket.handshake.authId) {
+            authId = socket.handshake.headers.authId;
+            if(!authId) {
                 // authId should always be set here
                 console.error("No authId set on connection!");
             }
@@ -73,7 +80,7 @@ var Server = Class.extend({
 
             self.addConnection(c);
             if(self.connect_callback) {
-                self.connect_callback(c,socket.handshake.authId);
+                self.connect_callback(c,authId);
             }
             self.counter++;
 

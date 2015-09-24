@@ -37,6 +37,7 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
             });
 
             this.dragElement = null;
+            this.targetElement = null;
             this.hoverEntity = null;
 
 
@@ -44,7 +45,6 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
 
         connect: function() {
             // Create gameclient and set event callbacks
-
             var self = this;
             this.client = new Gameclient(this);
 
@@ -144,6 +144,7 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
                     item.drop();
                 }
             });
+
 
             this.client.connect();
 
@@ -323,7 +324,9 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
                 y = this.mouse.y;
 
             guiElem = this.GUI.findElement(x, y);
+            this.targetElement = guiElem;
             if(guiElem && guiElem.allowDrag) {
+                // A draggable GUI elem was hit, handle dragging
                 this.dragElement = guiElem;
                 guiElem.dragStartX = x;
                 guiElem.dragStartY = y;
@@ -334,8 +337,57 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
                 this.GUI.hideContextMenu();
                 return true;
             } else {
+                // No draggable GUI elem was hit, pass event along to GUI
+                this.GUI.mousedown(x,y);
+            }
+        },
+
+        click: function() {
+            if(this.dragging()) {
+                this.releaseElement();
+                return;
+            }
+            var x = this.mouse.x,
+                y = this.mouse.y;
+
+            var guiElem = this.GUI.findElement(x,y);
+            if(guiElem != this.targetElement) {
+                // If the click was started on a GUI elem and ended on another, abort action
                 return false;
             }
+
+            if(this.GUI.click(x,y)) {
+                // Do nothing, click was caught by the GUI
+            } else if(this.app.isInViewport(x,y)) {
+
+                var pos = this.getAbsoluteMouseGridPosition();
+                if(!_.isEqual(pos,this.player.getGridPosition())) {
+                    var entity = this.getEntityAt(pos.x, pos.y),
+                        walkTo = false;
+
+                    if(entity) {
+                        console.log("clicked " + entity.id);
+                        if(entity instanceof Character) {
+                            console.log("Don't walk onto other characters! That's just rude.");
+                            walkTo = false;
+                        } else if(entity instanceof Item) {
+                            walkTo = true;
+
+                        }
+                    } else {
+                        walkTo = true;
+                        //this.player.setGridPosition(pos.x,pos.y,true);
+                    }
+                    if(walkTo) {
+                        this.client.sendMove(pos.x,pos.y);
+                        this.player.walkTo(pos.x,pos.y);
+                    }
+                } else {
+                    console.info("Clicked self.");
+                }
+
+            }
+            this.GUI.hideContextMenu();
         },
 
         rightclick: function() {
@@ -376,50 +428,6 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
             return false;
         },
 
-        click: function() {
-            if(this.dragging()) {
-                this.releaseElement();
-                return;
-            }
-            var x = this.mouse.x,
-                y = this.mouse.y;
-
-            var guiElem = this.GUI.findElement(x,y);
-            if(guiElem) {
-                this.GUI.click(guiElem.id, x, y);
-            } else if(this.app.isInViewport(x,y)) {
-
-                var pos = this.getAbsoluteMouseGridPosition();
-                if(!_.isEqual(pos,this.player.getGridPosition())) {
-                    var entity = this.getEntityAt(pos.x, pos.y),
-                        walkTo = false;
-
-                    if(entity) {
-                        console.log("clicked " + entity.id);
-                        if(entity instanceof Character) {
-                            console.log("Don't walk onto other characters! That's just rude.");
-                            walkTo = false;
-                        } else if(entity instanceof Item) {
-                            walkTo = true;
-
-                        }
-                    } else {
-                        walkTo = true;
-                        //this.player.setGridPosition(pos.x,pos.y,true);
-                    }
-                    if(walkTo) {
-                        this.client.sendMove(pos.x,pos.y);
-                        this.player.walkTo(pos.x,pos.y);
-                    }
-
-
-                } else {
-                    console.info("Clicked self.");
-                }
-
-            }
-            this.GUI.hideContextMenu();
-        },
 
         hover: function() {
             var oldEntity = this.hoverEntity;
@@ -430,6 +438,7 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
                 if(!this.dragging()) {
                     var elem = this.GUI.findElement(x,y);
                     if((!elem) && this.app.isInViewport(x,y)) {
+                        this.GUI.resetImageButtons();
                         var relPos = this.getRelativeMouseGridPosition();
                         var absPos = this.getAbsoluteMouseGridPosition();
                         if(relPos.x != this.curTileX || relPos.y != this.curTileY) {
@@ -451,6 +460,7 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
                         this.hoverEntity = elem;
 
                     } else {
+                        this.GUI.resetImageButtons();
                         this.curTileX = undefined;
                         this.curTileY = undefined;
                     }
@@ -502,7 +512,7 @@ define(['Renderer','Player','Pathfinder','Updater','Map','Character','GUI','Item
             var self = this;
             if(!this.started) {
                 var wait = setInterval(function() {
-                    if(self.map.isLoaded) {
+                    if(self.map.isLoaded && !self.started) {
                         self.initEntityGrid();
                         self.connect();
                         self.started = true;

@@ -4,7 +4,10 @@ var Class = require("./lib/class.js"),
     Types = require("../../shared/Types.js"),
     Item = require("./Item.js"),
     mapData = require("../../shared/world.js"),
-    Boots = require("./Boots.js");
+    mysql = require("mysql"),
+    Player = require("./Player.js"),
+    Boots = require("./Boots.js"),
+    Database = require("./Database.js");
 
 
 var Worldserver = Class.extend({
@@ -20,6 +23,18 @@ var Worldserver = Class.extend({
         this.entities = {};
         this.players = {};
         this.items = {};
+
+
+        //this.database = new Database();
+
+        this.sqlCon = mysql.createConnection({
+            host     : 'localhost',
+            user     : 'root',
+            password : 'hallo'
+        });
+
+        //this.sqlCon.connect();
+
 
 
         // Add some items for test only
@@ -78,33 +93,103 @@ var Worldserver = Class.extend({
         this.addEntity(item);
     },
 
-    addPlayer: function(player) {
+    addPlayer: function(connection, id) {
         var self = this;
 
-        player.onExit(function() {
-            self.removePlayer(player);
-        });
-        this.players[player.id] = player;
-        this.addEntity(player);
-        this.outgoingQueues[player.id] = [];
+        var sqlCallback = function(rows) {
+            // This function is called once the query for the player data has finished
+            var player;
+            if(rows.length == 0) {
+                // Player not found
+                player = new Player(connection,self,id);
+                var playerData = {
+                    internal_id: id,
+                    name: player.name,
+                    inventory: "",
+                    equipped: "",
+                    posX: player.x,
+                    posY: player.y
+                };
+
+                /*
+                var query = self.sqlCon.query('INSERT INTO runkel.players SET ?', playerData, function(err, result) {
+                    if (err) throw err;
+                });
+                */
 
 
-        // Could be moved to a callback
 
-        // Announce connection to other players
-        this.pushBroadcast(new Messages.Spawn(player).data, player.id);
-
-        // Announce other players to connecting player
-        _.each(this.players, function(p) {
-            if(p.id !== player.id) {
-                self.pushToPlayer(player, new Messages.Spawn(p).data);
+            } else if(rows.length == 1) {
+                // Player found
+                player = new Player(connection,self,id);
+                player.name = rows[0]['name'];
+                console.log("Setting position to ", rows[0]['posX'],rows[0]['posY']);
+                player.setPosition(parseInt(rows[0]['posX']),parseInt(rows[0]['posY']));
+            } else {
+                // This should never happen
+                console.error("More than one player with id '" + id + "' found.");
             }
-        });
 
-        // Test, push items to player
-        _.each(this.items, function(item) {
-            self.pushBroadcast(new Messages.Spawn(item).data);
-        });
+
+            player.onExit(function() {
+
+                var playerData = {
+                    posX: player.x,
+                    posY: player.y
+                };
+                /*
+                var query = self.sqlCon.query('UPDATE runkel.players SET ?', playerData, function(err, result) {
+                    if (err) throw err;
+
+                    self.removePlayer(player);
+                });
+                */
+
+                 self.removePlayer(player);
+
+            });
+            self.players[player.id] = player;
+            self.addEntity(player);
+            self.outgoingQueues[player.id] = [];
+
+            // Could be moved to a callback
+
+            // Announce connection to other players
+            self.pushBroadcast(new Messages.Spawn(player).data, player.id);
+
+            // Announce other players to connecting player
+            _.each(self.players, function(p) {
+                if(p.id !== player.id) {
+                    self.pushToPlayer(player, new Messages.Spawn(p).data);
+                }
+            });
+
+            // Test, push items to player
+            _.each(self.items, function(item) {
+                self.pushBroadcast(new Messages.Spawn(item).data);
+            });
+        };
+
+        sqlCallback([]);
+
+        /*
+        var rows = [],
+            sqlFields;
+        var query = this.sqlCon.query("SELECT * FROM runkel.players WHERE internal_id = '" + id + "'");
+        // Collect rows, call callback when all rows have been collected
+        query.on('error', function(err) {
+            console.error("Error during SQL connection");
+            })
+            .on('fields', function(fields) {
+                sqlFields =  fields;
+            })
+            .on('result', function(row) {
+                rows.push(row);
+            })
+            .on('end', function() {
+                sqlCallback(rows);
+            });
+            */
     },
 
     removeEntity: function(entity) {
